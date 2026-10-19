@@ -127,7 +127,7 @@ try{const o=JSON.parse(localStorage.getItem("aiwb.v1")||"null");if(o&&!S.chats.l
 if(/SmolLM2-360M/.test(S.model))S.model="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC";
 if(!S.chats.length){const c=mk();S.chats.push(c);S.cur=c.id}
 const cur=()=>S.chats.find(c=>c.id===S.cur)||S.chats[0];
-let saveT=0,busy=false,engine=null,loaded=null,prevT=0,last="";
+let saveT=0,busy=false,stopped=false,engine=null,loaded=null,prevT=0,last="";
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S));$("saved").textContent="Saved locally"}catch(e){$("saved").textContent="Storage full: download your work"}},300)}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function toast(h,ms){const t=$("toast");t.innerHTML=h;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",ms||6000)}
@@ -137,7 +137,8 @@ function render(force){const go=()=>{const c=cur().code;if(c!==last){last=c;$("f
 function setCode(c,force){cur().code=c;if($("code").style.display==="block")$("code").value=c;render(force);save()}
 function extractHtml(t){const m=t.match(/```(?:html)?\s*\n?([\s\S]*?)(?:```|$)/i),h=m?m[1]:t,i=h.search(/<!DOCTYPE|<html|<body/i);return i<0?"":h.slice(i).trim()}
 function finalize(h){
-  h=h.replace(/<\/html>[\s\S]*$/i,"</html>");
+  h=h.replace(/<\/html>[\s\S]*$/i,"</html>").replace(/<[^>]*$/,"");
+  for(const t of["style","script"]){const o=(h.match(new RegExp("<"+t+"[\\s>]","gi"))||[]).length,c=(h.match(new RegExp("</"+t+">","gi"))||[]).length;if(o>c)h+="\n</"+t+">"}
   if(!/<html/i.test(h))h='<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Site</title></head>'+(/<body/i.test(h)?h:"<body>"+h);
   if(!/<\/body>/i.test(h))h+="\n</body>";if(!/<\/html>/i.test(h))h+="\n</html>";
   if(!/name=["']viewport/i.test(h))h=h.replace(/<head[^>]*>/i,m=>m+'<meta name="viewport" content="width=device-width,initial-scale=1">');
@@ -193,7 +194,7 @@ async function ensureEngine(){
 const SYS="You are a senior web designer and front-end developer. Write ONE complete, working, self-contained HTML5 page. Rules: put all CSS in a <style> tag and any JavaScript in a <script> tag; no external files, fonts, images or CDN links (use CSS gradients, emoji or inline SVG for visuals); mobile-friendly layout with flexbox or grid; a clear colour palette, good spacing and readable type; real, specific copy instead of lorem ipsum; include a header or nav, a hero, two or three content sections and a footer unless the request says otherwise; make buttons and forms actually work. If existing code is given, return the full updated page with the requested change. Reply with only a ```html code block that starts with <!DOCTYPE html>. No explanations.";
 async function generate(){
   const p=$("prompt").value.trim();if(!p||busy)return;
-  busy=true;$("send").disabled=true;$("btnStop").disabled=false;
+  busy=true;stopped=false;$("send").disabled=true;$("btnStop").disabled=false;
   const ch=cur(),backup=ch.code;
   if($("hello"))$("hello").remove();
   if(ch.title==="New chat"){ch.title=p.slice(0,34);$("title").textContent=ch.title}
@@ -205,16 +206,16 @@ async function generate(){
     if(ch.code!==EMPTY&&!edit)live.textContent="This page is too large to edit with the model's memory, so I'm building a new one. Building…";
     $("status").textContent="Generating…";
     const user=edit?"Current page:\n```html\n"+ch.code+"\n```\n\nChange to make: "+p:"Build this website: "+p;
-    const stream=await e.chat.completions.create({messages:[{role:"system",content:SYS},{role:"user",content:user}],stream:true,temperature:0.3,top_p:0.9,repetition_penalty:1.05,max_tokens:2200,stop:["</html>"]});
+    const stream=await e.chat.completions.create({messages:[{role:"system",content:SYS},{role:"user",content:user}],stream:true,temperature:0.3,top_p:0.9,repetition_penalty:1.05,max_tokens:edit?2400:3500,stop:["</html>"]});
     let acc="",n=0,stuck=false;
     for await(const c of stream){
       acc+=c.choices[0]?.delta?.content||"";
-      if(++n%6===0){const h=extractHtml(acc);if(h.length>40){ch.code=finalize(h);render();live.textContent="Building… "+acc.length+" characters"}
-        if(n%24===0&&looping(acc)){stuck=true;e.interruptGenerate();break}}
+      if(++n%6===0){const h=extractHtml(acc);if(h.length>40){ch.code=finalize(h);render();live.textContent="Building… "+acc.length+" characters"}}
     }
+    if(stuck){const t=acc.slice(-80),i=acc.indexOf(t);if(i>=0)acc=acc.slice(0,i+t.length)}
     const h=extractHtml(acc);let msg;
-    if(h.length>200&&!stuck){setCode(finalize(h),true);msg={r:"a",t:"Done. Ask for changes, or press Publish Live to put it online."}}
-    else{ch.code=backup;render(true);msg={r:"e",t:stuck?"The model got stuck repeating itself, so I kept your previous page. Try a more specific prompt or the Qwen 1.5B model.":"The model did not return a usable page, so I kept your previous page. Try rewording your request or use a larger model."}}
+    if(h.length>200){setCode(finalize(h),true);msg={r:"a",t:stuck?"The model started repeating itself, so I stopped it and kept everything built up to that point. You can tweak the page in the Code tab or ask for changes.":stopped?"Stopped. I kept everything built so far.":"Done. Ask for changes, or press Publish Live to put it online."}}
+    else{ch.code=backup;render(true);msg={r:"e",t:"The model stopped before it produced a usable page, so I kept your previous one. Try a more specific prompt or the Qwen 1.5B model."}}
     ch.msgs[ch.msgs.length-1]=msg;live.className="m "+msg.r;live.textContent=msg.t;save();$("status").textContent="Ready";
   }catch(err){
     ch.code=backup;render(true);say("Error: "+(err&&err.message||err),"e");$("status").textContent="Failed";$("bar").style.display="none";
@@ -222,7 +223,7 @@ async function generate(){
   }
   busy=false;$("send").disabled=false;$("btnStop").disabled=true;
 }
-$("send").onclick=generate;$("btnStop").onclick=()=>engine&&engine.interruptGenerate();
+$("send").onclick=generate;$("btnStop").onclick=()=>{stopped=true;engine&&engine.interruptGenerate()};
 $("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey||!e.shiftKey)){e.preventDefault();generate()}});
 $("model").addEventListener("change",()=>{S.model=$("model").value;updWarn();save()});
 

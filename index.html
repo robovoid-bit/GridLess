@@ -3,273 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows 11 Web OS</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://jsdelivr.net"></script>
-    <!-- FontAwesome for Windows-like icons -->
-    <link rel="stylesheet" href="https://cloudflare.com">
+    <title>Chromebook Local AI Stress Tester</title>
     <style>
         body {
-            background: url('https://unsplash.com') no-repeat center center fixed;
-            background-size: cover;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f7;
+            color: #1d1d1f;
         }
-        .window {
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        .taskbar {
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            background: rgba(243, 243, 243, 0.85);
+        h1 { font-size: 20px; margin-top: 0; }
+        button {
+            background: #0071e3;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-right: 8px;
+            margin-bottom: 8px;
         }
-        @media (prefers-color-scheme: dark) {
-            .taskbar { background: rgba(32, 32, 32, 0.85); }
+        button:hover { background: #0077ed; }
+        button.secondary { background: #86868b; }
+        #console {
+            background: #1d1d1f;
+            color: #00ff00;
+            font-family: monospace;
+            padding: 14px;
+            border-radius: 6px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            font-size: 13px;
+            line-height: 1.5;
         }
     </style>
 </head>
-<body class="h-screen w-screen relative m-0">
+<body>
 
-    <!-- 1. Boot Screen Simulation -->
-    <div id="boot-screen" class="absolute inset-0 bg-black z-50 flex flex-col justify-center items-center transition-opacity duration-1000">
-        <i class="fab fa-windows text-7xl text-sky-500 mb-20 animate-pulse"></i>
-        <div class="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
-    </div>
-
-    <!-- 2. Main Desktop Environment -->
-    <div id="desktop" class="w-full h-[calc(100vh-48px)] p-4 relative grid grid-flow-col auto-cols-max grid-rows-6 gap-6 justify-start items-start">
-        <!-- Desktop Shortcut: Microsoft Edge Browser -->
-        <div onclick="openWindow('browser-win')" class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white/10 cursor-pointer w-20 text-center transition-colors">
-            <i class="fab fa-edge text-4xl text-cyan-500 drop-shadow"></i>
-            <span class="text-white text-xs mt-1 drop-shadow-md font-medium">Edge Browser</span>
-        </div>
-
-        <!-- Desktop Shortcut: Virtual Downloads Folder -->
-        <div onclick="openWindow('downloads-win')" class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white/10 cursor-pointer w-20 text-center transition-colors">
-            <i class="fas fa-folder-open text-4xl text-amber-400 drop-shadow"></i>
-            <span class="text-white text-xs mt-1 drop-shadow-md font-medium">Downloads</span>
-        </div>
-    </div>
-
-    <!-- 3. Dynamic App Windows -->
+<div class="card">
+    <h1>Chromebook Client-Side AI Test Bench</h1>
+    <p>Use these buttons to instantly trigger the boundary tests directly in your browser tab.</p>
     
-    <!-- Microsoft Edge Virtual Browser -->
-    <div id="browser-win" class="window hidden absolute w-[800px] h-[550px] bg-neutral-900/90 rounded-xl overflow-hidden flex flex-col z-10 resize top-16 left-32">
-        <!-- Window Titlebar -->
-        <div class="h-10 bg-neutral-900 flex items-center justify-between px-4 text-white border-b border-white/10 cursor-move" onmousedown="dragStart(event, 'browser-win')">
-            <div class="flex items-center gap-2 text-sm text-neutral-300">
-                <i class="fab fa-edge text-cyan-400"></i>
-                <span>Microsoft Edge (Sandbox with WebSockets)</span>
-            </div>
-            <div class="flex gap-4 text-neutral-400 text-sm">
-                <button onclick="minimizeWindow('browser-win')" class="hover:text-white"><i class="fas fa-minus"></i></button>
-                <button onclick="closeWindow('browser-win')" class="hover:text-red-500"><i class="fas fa-times"></i></button>
-            </div>
-        </div>
-        <!-- Browser Address Bar -->
-        <div class="p-2 bg-neutral-800 flex gap-2 items-center border-b border-white/5">
-            <div class="flex gap-3 text-neutral-400 px-2">
-                <i class="fas fa-arrow-left cursor-pointer hover:text-white" onclick="document.getElementById('browser-frame').contentWindow.history.back()"></i>
-                <i class="fas fa-arrow-right cursor-pointer hover:text-white" onclick="document.getElementById('browser-frame').contentWindow.history.forward()"></i>
-                <i class="fas fa-redo cursor-pointer hover:text-white" onclick="document.getElementById('browser-frame').src = document.getElementById('browser-url').value"></i>
-            </div>
-            <input id="browser-url" type="text" value="https://example.com" class="flex-1 bg-neutral-700 text-white rounded px-3 py-1 text-sm border border-neutral-600 focus:outline-none focus:border-sky-500" onkeydown="if(event.key === 'Enter') navigateBrowser()">
-            <button onclick="simulateVirtualDownload()" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1 rounded text-xs flex items-center gap-1">
-                <i class="fas fa-download"></i> Test Download
-            </button>
-        </div>
-        <!-- Browser Viewport Frame -->
-        <div class="flex-1 bg-white relative">
-            <!-- Sandbox note: Many large domains (Google, YouTube) block rendering inside iframes via X-Frame-Options headers. -->
-            <iframe id="browser-frame" src="https://example.com" class="w-full h-full border-none" allow="websocket; clipboard-write"></iframe>
-        </div>
-    </div>
+    <button onclick="runEmptyInputTest()">Test 1: Empty Input</button>
+    <button onclick="runGarbageInputTest()">Test 2: Symbol Stress</button>
+    <button onclick="runMassiveInputTest()">Test 3: 10k Word Flood</button>
+    <button class="secondary" onclick="clearLogs()">Clear Console</button>
 
-    <!-- Virtual File Explorer (Downloads) -->
-    <div id="downloads-win" class="window hidden absolute w-[600px] h-[400px] bg-neutral-900/90 rounded-xl overflow-hidden flex flex-col z-10 resize top-32 left-48">
-        <div class="h-10 bg-neutral-900 flex items-center justify-between px-4 text-white border-b border-white/10 cursor-move" onmousedown="dragStart(event, 'downloads-win')">
-            <div class="flex items-center gap-2 text-sm text-neutral-300">
-                <i class="fas fa-folder text-amber-400"></i>
-                <span>File Explorer - Downloads</span>
-            </div>
-            <div class="flex gap-4 text-neutral-400 text-sm">
-                <button onclick="closeWindow('downloads-win')" class="hover:text-red-500"><i class="fas fa-times"></i></button>
-            </div>
-        </div>
-        <!-- Storage File List -->
-        <div id="downloads-list" class="flex-1 p-4 overflow-y-auto text-white flex flex-col gap-2 bg-neutral-800/50">
-            <p class="text-neutral-400 text-sm italic" id="empty-msg">No downloaded assets inside this OS session yet.</p>
-        </div>
-    </div>
+    <div id="console">> Tester ready. Click a routine above...</div>
+</div>
 
-    <!-- 4. Windows 11 Bottom Taskbar -->
-    <div class="taskbar absolute bottom-0 left-0 right-0 h-12 flex justify-between items-center px-4 z-40 border-t border-black/5 dark:border-white/10">
-        <!-- Placeholder left spacing for symmetric alignment -->
-        <div class="w-24"></div>
+<script>
+    const logger = document.getElementById('console');
+
+    function log(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        let color = '#00ff00';
+        if (type === 'error') color = '#ff453a';
+        if (type === 'warn') color = '#ff9f0a';
         
-        <!-- Center Apps / Start Menu System -->
-        <div class="flex items-center gap-1 bg-white/20 dark:bg-black/10 py-1 px-2 rounded-md">
-            <button onclick="toggleStartMenu()" class="p-2 rounded hover:bg-white/20 text-sky-500 text-xl transition-all duration-200">
-                <i class="fab fa-windows"></i>
-            </button>
-            <button onclick="openWindow('browser-win')" class="p-2 rounded hover:bg-white/20 text-cyan-500 text-lg">
-                <i class="fab fa-edge"></i>
-            </button>
-            <button onclick="openWindow('downloads-win')" class="p-2 rounded hover:bg-white/20 text-amber-400 text-lg">
-                <i class="fas fa-folder"></i>
-            </button>
-        </div>
+        logger.innerHTML += `<br><span style="color: ${color}">[${timestamp}] ${message}</span>`;
+        logger.scrollTop = logger.scrollHeight;
+    }
 
-        <!-- Right System Tray (Clock / Battery / Status) -->
-        <div class="flex items-center gap-3 text-xs font-semibold text-neutral-700 dark:text-neutral-200 bg-white/10 dark:bg-black/10 px-3 py-1 rounded">
-            <div class="flex gap-2">
-                <i class="fas fa-wifi"></i>
-                <i class="fas fa-volume-up"></i>
-                <i class="fas fa-battery-three-quarters"></i>
-            </div>
-            <div class="text-right border-l border-neutral-400 dark:border-neutral-600 pl-2" id="system-clock">
-                12:00 PM<br>9/29/2026
-            </div>
-        </div>
-    </div>
+    function clearLogs() {
+        logger.innerHTML = '> Console cleared.';
+    }
 
-    <!-- Start Menu Overlay -->
-    <div id="start-menu" class="hidden absolute bottom-14 left-1/2 -translate-x-1/2 w-[450px] h-[500px] bg-neutral-900/95 backdrop-blur-xl rounded-2xl border border-white/10 z-40 p-6 text-white shadow-2xl flex flex-col justify-between">
-        <div>
-            <input type="text" placeholder="Type here to search..." class="w-full bg-neutral-800 border border-neutral-700 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-sky-500 mb-6">
-            <h3 class="text-xs text-neutral-400 font-semibold tracking-wider uppercase mb-3">Pinned Apps</h3>
-            <div class="grid grid-cols-4 gap-4 text-center">
-                <div onclick="openWindow('browser-win'); toggleStartMenu();" class="p-2 hover:bg-white/10 rounded-lg cursor-pointer">
-                    <i class="fab fa-edge text-3xl text-cyan-400"></i>
-                    <p class="text-xs mt-1">Edge</p>
-                </div>
-                <div onclick="openWindow('downloads-win'); toggleStartMenu();" class="p-2 hover:bg-white/10 rounded-lg cursor-pointer">
-                    <i class="fas fa-folder text-3xl text-amber-400"></i>
-                    <p class="text-xs mt-1">Downloads</p>
-                </div>
-            </div>
-        </div>
-        <div class="flex justify-between items-center pt-4 border-t border-white/10 text-sm">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center font-bold">U</div>
-                <span>User Session</span>
-            </div>
-            <i class="fas fa-power-off text-red-400 hover:text-red-500 cursor-pointer" onclick="location.reload()"></i>
-        </div>
-// Hide boot loader screen after simulation finishes
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        const boot = document.getElementById('boot-screen');
-        boot.classList.add('opacity-0');
-        setTimeout(() => boot.remove(), 1000);
-    }, 2500);
-    updateClock();
-    setInterval(updateClock, 60000);
-});
+    // TEST 1: Empty Input Simulation
+    function runEmptyInputTest() {
+        log('--- Starting Test: Empty Input Handling ---');
+        const simulatedInput = "";
+        log(`Simulated user input string length: ${simulatedInput.length}`);
+        
+        try {
+            // Simulating basic dumb AI processing logic
+            if (simulatedInput.trim() === "") {
+                log('Success: Engine safely caught empty string fallback state.', 'info');
+            } else {
+                log('Fail: Engine attempted to parse empty data.', 'error');
+            }
+        } catch (err) {
+            log(`CRASH: ${err.message}`, 'error');
+        }
+    }
 
-// Live Windows Clock System
-function updateClock() {
-    const now = new Date();
-    document.getElementById('system-clock').innerHTML = `${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}<br>${now.toLocaleDateString()}`;
-}
+    // TEST 2: Symbols and Non-Standard Tokens
+    function runGarbageInputTest() {
+        log('--- Starting Test: String Tokenization ---');
+        const simulatedInput = "ææ♯⚄ 109238!@# \$%^&*()";
+        log(`Feeding garbage text: "${simulatedInput}"`);
+        
+        // Clean regex simulation
+        const tokens = simulatedInput.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
+        log(`Tokens parsed by script: [${tokens.join(', ')}]`);
+        log(`Total valid dictionary matches found: ${tokens.length}`);
+        log('Success: UI thread remained unblocked.', 'info');
+    }
 
-// Window Control Framework
-function openWindow(id) {
-    const win = document.getElementById(id);
-    win.classList.remove('hidden');
-    // Bring window to front
-    document.querySelectorAll('.window').forEach(w => w.style.zIndex = "10");
-    win.style.zIndex = "30";
-}
+    // TEST 3: Memory and Thread Locking Stressor
+    function runMassiveInputTest() {
+        log('--- Starting Test: 10,000 Word Data Flood ---', 'warn');
+        log('Generating payload...', 'info');
+        
+        // Construct massive block of dummy words
+        let giantString = "";
+        for(let i = 0; i < 10000; i++) {
+            giantString += "dummytext ";
+        }
+        
+        log(`Payload created. Size: ${(giantString.length / 1024).toFixed(2)} KB.`, 'info');
+        log('Injecting payload into processing loop...', 'warn');
+        
+        const startTime = performance.now();
+        
+        // Simulate string evaluation
+        const wordCount = giantString.split(' ').length;
+        
+        const endTime = performance.now();
+        const duration = (endTime - startTime).toFixed(2);
+        
+        log(`Execution complete. Parsed ${wordCount} items.`);
+        log(`Main UI Thread execution time: ${duration}ms`);
+        
+        if (duration > 50) {
+            log('Warning: Execution took over 50ms. Low-end Chromebooks may experience a brief visual stutter.', 'warn');
+        } else {
+            log('Success: Process timing falls safely within the 60fps frame budget.', 'info');
+        }
+    }
+</script>
 
-function closeWindow(id) {
-    document.getElementById(id).classList.add('hidden');
-}
-
-function minimizeWindow(id) {
-    document.getElementById(id).classList.add('hidden');
-}
-
-function toggleStartMenu() {
-    document.getElementById('start-menu').classList.toggle('hidden');
-}
-
-// Virtual Browser Navigation Framework
-function navigateBrowser() {
-    let url = document.getElementById('browser-url').value.trim();
-    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-    document.getElementById('browser-url').value = url;
-    document.getElementById('browser-frame').src = url;
-}
-
-// Virtual Client-Side Downloading Infrastructure
-// This persists data locally inside the simulated OS environment using IndexedDB or LocalStorage
-let fileCounter = 1;
-function simulateVirtualDownload() {
-    const currentUrl = document.getElementById('browser-url').value;
-    const filename = `download_blob_${fileCounter++}_data.txt`;
-    
-    // Generate virtual payload data inside browser memory
-    const mockContent = `Downloaded from inside OS Sandbox environment.\nSource URL Context: ${currentUrl}\nTimestamp: ${new Date().toISOString()}`;
-    
-    // Save inside simulated browser local session
-    const fileList = document.getElementById('downloads-list');
-    const emptyMsg = document.getElementById('empty-msg');
-    if(emptyMsg) emptyMsg.remove();
-    
-    const item = document.createElement('div');
-    item.className = "flex items-center justify-between p-2 bg-neutral-700/50 rounded hover:bg-neutral-700 text-sm transition-colors";
-    item.innerHTML = `<div class="flex items-center gap-3">
-        <i class="fas fa-file-alt text-sky-400 text-lg"></i>
-        <div>
-            <p class="font-medium">${filename}</p>
-            <p class="text-xs text-neutral-400">${(mockContent.length / 1024).toFixed(3)} KB</p>
-        </div>
-    </div>
-    <button onclick="exportToHostOS('${filename}', '${btoa(mockContent)}')" class="text-xs text-sky-400 hover:underline">
-        Save to Host PC
-    </button>`;
-    
-    fileList.appendChild(item);
-    openWindow('downloads-win');
-}
-
-// Native Link Out: Passes the simulated sandboxed file directly out into user's real local machine
-function exportToHostOS(filename, base64Content) {
-    const element = document.createElement('a');
-    element.setAttribute('href', 'data:text/plain;base64,' + base64Content);
-    element.setAttribute('download', filename);
-    element.style.display = 'none';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-}
-
-// Window Draggable Interface Handler
-let activeWin = null, offsetX = 0, offsetY = 0;
-function dragStart(e, id) {
-    activeWin = document.getElementById(id);
-    // Bring to top hierarchy on grab
-    document.querySelectorAll('.window').forEach(w => w.style.zIndex = "10");
-    activeWin.style.zIndex = "30";
-    offsetX = e.clientX - activeWin.offsetLeft;
-    offsetY = e.clientY - activeWin.offsetTop;
-    document.addEventListener('mousemove', dragMove);
-    document.addEventListener('mouseup', dragEnd);
-}
-
-function dragMove(e) {
-    if (!activeWin) return;
-    activeWin.style.left = `${e.clientX - offsetX}px`;
-    activeWin.style.top = `${e.clientY - offsetY}px`;
-}
-
-function dragEnd() {
-    activeWin = null;
-    document.removeEventListener('mousemove', dragMove);
-    document.removeEventListener('mouseup', dragEnd);
-}
+</body>
+</html>

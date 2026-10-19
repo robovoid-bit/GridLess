@@ -3,241 +3,291 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Local AI Web Builder</title>
+<title>AI Web Builder</title>
 <style>
-:root{--bg:#14161a;--panel:#1b1e24;--panel2:#23272f;--line:#2f343e;--text:#e6e8ec;--mute:#9aa1ad;--acc:#5eead4;--accd:#0f3d38;--warn:#f5b84b;--err:#ff7a7a}
+:root{--bg:#1f1e1c;--side:#262522;--panel:#2d2b28;--line:#3b3935;--text:#eeebe5;--mute:#a39e94;--acc:#d08a5e;--accd:#3a2c22;--warn:#f0c060;--err:#ff8a80;--r:14px}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex}
+body{background:var(--bg);color:var(--text);font:14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;overflow:hidden}
 button,select,textarea,input{font:inherit;color:inherit}
-button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:8px 12px}
-button:hover{border-color:var(--acc)}
-button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-button.primary{background:var(--acc);color:#06201c;border-color:var(--acc);font-weight:600}
-button:disabled{opacity:.5;cursor:not-allowed}
-#left{width:380px;min-width:300px;max-width:45%;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px;gap:10px;overflow:auto}
-#right{flex:1;display:flex;flex-direction:column;min-width:0}
-h1{font-size:16px;margin:0;display:flex;justify-content:space-between;align-items:center}
-label{color:var(--mute);font-size:12px;display:block;margin-bottom:4px}
-select,textarea,input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
-textarea{resize:vertical;min-height:110px}
-.row{display:flex;gap:8px}.row>*{flex:1}
-.warn{background:#3a2d12;border:1px solid var(--warn);color:var(--warn);border-radius:8px;padding:8px;font-size:12px;display:none}
-.warn.show{display:block}
-#status{font-size:12px;color:var(--mute);min-height:18px}
-#bar{height:6px;background:var(--bg);border-radius:4px;overflow:hidden;display:none}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:7px 12px;transition:border-color .15s,background .15s}
+button:hover:not(:disabled){border-color:var(--acc)}
+button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.primary{background:var(--acc);border-color:var(--acc);color:#1d130c;font-weight:600}
+.ghost{background:none;border-color:transparent;color:var(--mute)}
+.ghost:hover:not(:disabled){color:var(--text);background:var(--panel)}
+#chat{width:420px;min-width:320px;max-width:46%;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;position:relative}
+#top{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
+#title{flex:1;font:600 17px Georgia,"Times New Roman",serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#acts{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+#acts button{flex:1}
+#log{flex:1;overflow:auto;padding:16px 14px;display:flex;flex-direction:column;gap:12px}
+.m{max-width:92%;padding:9px 13px;border-radius:var(--r);word-wrap:break-word;white-space:pre-wrap}
+.m.u{align-self:flex-end;background:var(--accd);border:1px solid #54402f}
+.m.a{align-self:flex-start;background:var(--panel);border:1px solid var(--line)}
+.m.e{align-self:flex-start;background:#3a2422;border:1px solid #6b3a36;color:var(--err)}
+.m a{color:var(--acc);word-break:break-all}
+.m button{margin-top:6px;padding:3px 10px;font-size:12px}
+#hello{margin:auto;text-align:center;color:var(--mute);max-width:300px}
+#hello h2{font:600 24px Georgia,serif;color:var(--text);margin:0 0 6px}
+.chips{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.chips button{text-align:left;background:none;color:var(--text);font-size:13px}
+#warn{display:none;margin:0 12px 8px;background:#3a3016;border:1px solid var(--warn);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:12px}
+#warn.show{display:block}
+#bar{display:none;height:4px;margin:0 12px 6px;background:var(--bg);border-radius:4px;overflow:hidden}
 #bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
-#log{flex:1;min-height:80px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);font-size:13px}
-#log p{margin:0 0 8px}#log .u{color:var(--acc)}#log .e{color:var(--err)}
-#tabs{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);align-items:center}
-#tabs button.on{background:var(--accd);border-color:var(--acc)}
-#tabs span{margin-left:auto;color:var(--mute);font-size:12px}
+#status{padding:0 14px 6px;font-size:12px;color:var(--mute);min-height:20px}
+#comp{margin:0 12px 12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px 10px 8px}
+#comp:focus-within{border-color:var(--acc)}
+#prompt{width:100%;background:none;border:0;resize:none;outline:0;min-height:52px;max-height:160px;padding:2px 4px}
+#cbar{display:flex;gap:8px;align-items:center}
+#model{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+#send{border-radius:50%;width:36px;height:36px;padding:0;font-size:17px}
+#drawer{position:absolute;inset:0;background:var(--side);z-index:5;display:none;flex-direction:column;padding:12px;gap:8px}
+#drawer.show{display:flex}
+#list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:4px}
+.ci{display:flex;align-items:center;gap:4px;border-radius:10px;padding:2px 4px 2px 10px;cursor:pointer}
+.ci:hover,.ci.on{background:var(--panel)}
+.ci.on{border:1px solid var(--line)}
+.ci span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 0}
+.ci small{color:var(--acc)}
+#right{flex:1;display:flex;flex-direction:column;min-width:0}
+#tabs{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--side);align-items:center}
+#tabs .on{background:var(--accd);border-color:var(--acc)}
+#tabs .sp{margin-left:auto;display:flex;gap:12px;align-items:center;font-size:12px;color:var(--mute);min-width:0}
+#live{color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #frame{flex:1;border:0;background:#fff;width:100%}
-#code{flex:1;display:none;resize:none;border-radius:0;border:0;background:var(--bg);font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre;tab-size:2}
-#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--acc);padding:10px 14px;border-radius:8px;display:none;max-width:90%;z-index:9;word-break:break-all}
+#code{flex:1;display:none;resize:none;border:0;border-radius:0;background:var(--bg);padding:12px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre;outline:0}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--acc);padding:10px 16px;border-radius:12px;display:none;max-width:90%;z-index:20}
 #toast a{color:var(--acc)}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
 #modal.show{display:flex}
-#modal .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;width:100%;max-width:440px;display:flex;flex-direction:column;gap:10px}
-#modal h2{margin:0;font-size:16px}#modal p{margin:0;color:var(--mute);font-size:13px}
-@media(max-width:800px){body{flex-direction:column;overflow:auto}#left{width:100%;max-width:none;border-right:0;border-bottom:1px solid var(--line)}#right{min-height:70vh}}
+.box{background:var(--side);border:1px solid var(--line);border-radius:16px;padding:22px;width:100%;max-width:450px;display:flex;flex-direction:column;gap:10px}
+.box h2{margin:0;font:600 20px Georgia,serif}.box p{margin:0;color:var(--mute);font-size:13px}
+.box label{font-size:12px;color:var(--mute);display:block;margin-bottom:3px}
+.box input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+@media(max-width:800px){body{flex-direction:column;overflow:auto}#chat{width:100%;max-width:none;height:85vh;border-right:0;border-bottom:1px solid var(--line)}#right{min-height:75vh}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<aside id="left">
-  <h1>AI Web Builder <button id="btnSettings" title="GitHub publishing settings">Settings</button></h1>
-  <div>
-    <label for="model">Model (runs in your browser, needs WebGPU)</label>
-    <select id="model" title="⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.">
-      <option value="SmolLM2-360M-Instruct-q4f16_1-MLC" data-heavy="0">Light: SmolLM2 360M (~0.4 GB)</option>
-      <option value="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC" data-heavy="0">Balanced: Qwen2.5 Coder 1.5B (~1.1 GB)</option>
-      <option value="Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 3B (~2.5 GB)</option>
-      <option value="Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 7B (~5 GB)</option>
-    </select>
+<aside id="chat">
+  <div id="drawer">
+    <div class="row"><button id="dNew" class="primary">+ New chat</button><button id="dClose">Close</button></div>
+    <div id="list"></div>
+    <button id="btnSettings">GitHub settings</button>
   </div>
-  <div id="warn" class="warn" role="alert">⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.</div>
-  <div id="bar"><i></i></div>
-  <div id="status">Model downloads once, then is cached in your browser.</div>
+  <div id="top"><button class="ghost" id="btnMenu" title="All chats">☰ Chats</button><div id="title">New chat</div><button class="ghost" id="btnNew" title="New chat">＋</button></div>
+  <div id="acts"><button id="btnDl">Download Code</button><button id="btnPub" class="primary">Publish Live</button></div>
   <div id="log" aria-live="polite"></div>
-  <div>
-    <label for="prompt">What should I build or change?</label>
-    <textarea id="prompt" placeholder="A landing page for a bike repair shop with a pricing table and a contact form"></textarea>
+  <div id="warn" role="alert">⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.</div>
+  <div id="bar"><i></i></div>
+  <div id="status"></div>
+  <div id="comp">
+    <textarea id="prompt" placeholder="Describe the site you want, or what to change…" aria-label="Prompt"></textarea>
+    <div id="cbar">
+      <select id="model" aria-label="Model" title="⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.">
+        <option value="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC" data-heavy="0">Recommended: Qwen2.5 Coder 1.5B (~1.1 GB)</option>
+        <option value="SmolLM2-360M-Instruct-q4f16_1-MLC" data-heavy="0">Draft only: SmolLM2 360M (rough results)</option>
+        <option value="Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 3B (~2.5 GB)</option>
+        <option value="Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 7B (~5 GB)</option>
+      </select>
+      <button id="btnStop" disabled>Stop</button>
+      <button id="send" class="primary" title="Send (Ctrl+Enter)" aria-label="Send">↑</button>
+    </div>
   </div>
-  <div class="row"><button id="btnGen" class="primary">Generate</button><button id="btnStop" disabled>Stop</button></div>
-  <div class="row"><button id="btnDl">Download Code</button><button id="btnPub">Publish Live</button></div>
-  <button id="btnClear">Start new project</button>
 </aside>
 <main id="right">
-  <div id="tabs"><button id="tPrev" class="on">Preview</button><button id="tCode">Code</button><span id="saved"></span></div>
+  <div id="tabs"><button id="tPrev" class="on">Preview</button><button id="tCode">Code</button><div class="sp"><a id="live" target="_blank" rel="noopener" hidden></a><span id="saved"></span></div></div>
   <iframe id="frame" title="Live preview" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
   <textarea id="code" spellcheck="false" aria-label="Generated code"></textarea>
 </main>
 <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
   <div class="box">
     <h2 id="mt">Connect GitHub to publish</h2>
-    <p>Paste a GitHub personal access token with write access to Contents, and the repository that has GitHub Pages turned on. Both are stored only in this browser's local storage and are sent only to api.github.com.</p>
-    <div><label for="repo">Repository (owner/name)</label><input id="repo" placeholder="robovoid-bit/testsite" autocomplete="off"></div>
-    <div><label for="token">GitHub token</label><input id="token" type="password" placeholder="github_pat_..." autocomplete="off"></div>
-    <div class="row"><button id="mCancel">Cancel</button><button id="mSave" class="primary">Save and publish</button></div>
+    <p>One-time setup, about 30 seconds. <a href="https://github.com/settings/tokens/new?scopes=repo&description=AI%20Web%20Builder" target="_blank" rel="noopener" style="color:var(--acc)">Open GitHub's token page</a> (the repo permission is already ticked), choose a long expiry, press Generate token, and paste it below. It stays in this browser only and is sent only to api.github.com. After this, Publish Live adds a folder like <b>your-site/5347</b> to your repo automatically.</p>
+    <div><label for="repo">Repository (owner/name)</label><input id="repo" autocomplete="off"></div>
+    <div><label for="token">GitHub token</label><input id="token" type="password" placeholder="github_pat_…" autocomplete="off"></div>
+    <div class="row"><button id="mCancel">Cancel</button><button id="mSave" class="primary">Save</button></div>
   </div>
 </div>
 <div id="toast" role="status"></div>
 
 <script type="module">
 import {CreateWebWorkerMLCEngine} from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm";
-
 const $=id=>document.getElementById(id);
-const KEY="aiwb.v1";
-const DEFAULT_HTML='<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#f4f4f5;color:#333;text-align:center}</style></head><body><div><h2>Your page appears here</h2><p>Describe a site on the left and press Generate.</p></div></body></html>';
-let S={code:DEFAULT_HTML,prompt:"",model:$("model").value,token:"",repo:"",chat:[]};
+const KEY="aiwb.v2",EMPTY='<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#f4f4f5;color:#444;text-align:center}</style></head><body><div><h2>Your page appears here</h2><p>Describe a site in the chat and press send.</p></div></body></html>';
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const mk=()=>({id:uid(),title:"New chat",code:EMPTY,msgs:[],folder:"",repo:"",url:""});
+let S={chats:[],cur:"",model:$("model").value,token:"",repo:"robovoid-bit/testsite"};
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){}
-let saveT=0;
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S));$("saved").textContent="Saved locally"}catch(e){$("saved").textContent="Storage full"}},300)}
+try{const o=JSON.parse(localStorage.getItem("aiwb.v1")||"null");if(o&&!S.chats.length&&o.code&&o.code.length>300){const c=mk();c.title="Earlier project";c.code=o.code;S.chats.push(c);S.cur=c.id;S.token=S.token||o.token||"";S.repo=o.repo||S.repo}}catch(e){}
+if(/SmolLM2-360M/.test(S.model))S.model="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC";
+if(!S.chats.length){const c=mk();S.chats.push(c);S.cur=c.id}
+const cur=()=>S.chats.find(c=>c.id===S.cur)||S.chats[0];
+let saveT=0,busy=false,engine=null,loaded=null,prevT=0,last="";
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S));$("saved").textContent="Saved locally"}catch(e){$("saved").textContent="Storage full: download your work"}},300)}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(h,ms){const t=$("toast");t.innerHTML=h;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",ms||6000)}
 
-/* ---------- Preview ---------- */
-let prevT=0,lastRender="";
-function render(force){
-  const go=()=>{if(S.code!==lastRender){lastRender=S.code;$("frame").srcdoc=S.code}};
-  if(force){clearTimeout(prevT);prevT=0;go();return}
-  if(!prevT)prevT=setTimeout(()=>{prevT=0;go()},500);
+/* ----- preview ----- */
+function render(force){const go=()=>{const c=cur().code;if(c!==last){last=c;$("frame").srcdoc=c}};if(force){clearTimeout(prevT);prevT=0;go()}else if(!prevT)prevT=setTimeout(()=>{prevT=0;go()},500)}
+function setCode(c,force){cur().code=c;if($("code").style.display==="block")$("code").value=c;render(force);save()}
+function extractHtml(t){const m=t.match(/```(?:html)?\s*\n?([\s\S]*?)(?:```|$)/i),h=m?m[1]:t,i=h.search(/<!DOCTYPE|<html|<body/i);return i<0?"":h.slice(i).trim()}
+function finalize(h){
+  h=h.replace(/<\/html>[\s\S]*$/i,"</html>");
+  if(!/<html/i.test(h))h='<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Site</title></head>'+(/<body/i.test(h)?h:"<body>"+h);
+  if(!/<\/body>/i.test(h))h+="\n</body>";if(!/<\/html>/i.test(h))h+="\n</html>";
+  if(!/name=["']viewport/i.test(h))h=h.replace(/<head[^>]*>/i,m=>m+'<meta name="viewport" content="width=device-width,initial-scale=1">');
+  return h.replace(/<head[^>]*>/i,m=>m+"<style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;line-height:1.5}img,svg{max-width:100%}</style>");
 }
-function setCode(c,force){S.code=c;if($("code").style.display==="block"&&document.activeElement!==$("code"))$("code").value=c;render(force);save()}
-function extractHtml(t){
-  let m=t.match(/```(?:html)?\s*\n?([\s\S]*?)(?:```|$)/i);
-  let h=m?m[1]:t;
-  const i=h.search(/<!DOCTYPE|<html/i);
-  if(i>0)h=h.slice(i);
-  return h.trim();
+const looping=s=>s.length>=600&&s.split(s.slice(-80)).length>3;
+
+/* ----- chats ----- */
+function bubble(m){
+  const d=document.createElement("div");d.className="m "+m.r;
+  if(m.url){d.append(m.t+" ");const a=document.createElement("a");a.href=m.url;a.target="_blank";a.rel="noopener";a.textContent=m.url;d.append(a,document.createElement("br"));
+    const b=document.createElement("button");b.textContent="Copy link";b.onclick=()=>{navigator.clipboard.writeText(m.url).then(()=>b.textContent="Copied")};d.append(b)}
+  else d.textContent=m.t;
+  $("log").appendChild(d);$("log").scrollTop=1e9;return d;
 }
+function say(t,r,url){const m={r:r||"a",t,url};const c=cur();c.msgs.push(m);c.msgs=c.msgs.slice(-80);save();return bubble(m)}
+const CHIPS=["A landing page for a bike repair shop with prices and a contact form","A personal portfolio with a dark theme and project cards","A to-do list app that saves tasks in the browser"];
+function showChat(){
+  const c=cur();$("title").textContent=c.title;$("log").innerHTML="";
+  if(!c.msgs.length){const h=document.createElement("div");h.id="hello";h.innerHTML="<h2>What shall we build?</h2>Describe a website and it appears on the right. Publish it when you like it.";
+    const w=document.createElement("div");w.className="chips";CHIPS.forEach(t=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{$("prompt").value=t;$("prompt").focus()};w.append(b)});h.append(w);$("log").append(h)}
+  else c.msgs.forEach(bubble);
+  last="";render(true);if($("code").style.display==="block")$("code").value=c.code;liveChip();
+}
+function liveChip(){const c=cur(),a=$("live");a.hidden=!c.url;if(c.url){a.href=c.url;a.textContent="Live: "+c.url.replace("https://","")}}
+function list(){
+  const L=$("list");L.innerHTML="";
+  S.chats.slice().reverse().forEach(c=>{
+    const d=document.createElement("div");d.className="ci"+(c.id===S.cur?" on":"");
+    const s=document.createElement("span");s.textContent=c.title;d.append(s);
+    if(c.url){const l=document.createElement("small");l.textContent="live";d.append(l)}
+    const x=document.createElement("button");x.className="ghost";x.textContent="✕";x.title="Delete chat";x.onclick=e=>{e.stopPropagation();if(busy)return toast("Wait for the current build to finish.");if(confirm("Delete this chat and its code? A published site stays online.")){S.chats=S.chats.filter(k=>k!==c);if(!S.chats.length)S.chats.push(mk());if(S.cur===c.id)S.cur=S.chats[S.chats.length-1].id;save();list();showChat()}};
+    d.append(x);d.onclick=()=>{if(busy)return toast("Wait for the current build to finish.");S.cur=c.id;save();$("drawer").classList.remove("show");showChat()};
+    L.append(d)});
+}
+function newChat(){if(busy)return toast("Wait for the current build to finish.");const c=mk();S.chats.push(c);S.cur=c.id;save();$("drawer").classList.remove("show");showChat();$("prompt").focus()}
+$("btnMenu").onclick=()=>{list();$("drawer").classList.add("show")};
+$("dClose").onclick=()=>$("drawer").classList.remove("show");
+$("btnNew").onclick=newChat;$("dNew").onclick=newChat;
 
-/* ---------- Log / status ---------- */
-function say(t,cls){const p=document.createElement("p");if(cls)p.className=cls;p.textContent=t;$("log").appendChild(p);$("log").scrollTop=1e9;return p}
-function toast(html,ms){const t=$("toast");t.innerHTML=html;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",ms||6000)}
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-
-/* ---------- Model + worker (all inference runs off the UI thread) ---------- */
-let engine=null,loadedModel=null,busy=false;
+/* ----- model + worker ----- */
 const workerSrc='import {WebWorkerMLCEngineHandler} from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm";const h=new WebWorkerMLCEngineHandler();self.onmessage=m=>h.onmessage(m);';
-function updWarn(){$("warn").classList.toggle("show",$("model").selectedOptions[0].dataset.heavy==="1")}
+const updWarn=()=>$("warn").classList.toggle("show",$("model").selectedOptions[0].dataset.heavy==="1");
 async function ensureEngine(){
-  if(!navigator.gpu)throw new Error("This browser has no WebGPU. Use a recent Chrome or Edge, and check chrome://gpu.");
-  const id=$("model").value;
-  if(engine&&loadedModel===id)return engine;
+  if(!navigator.gpu)throw new Error("This browser has no WebGPU. Use a recent Chrome or Edge and check chrome://gpu.");
+  const id=$("model").value;if(engine&&loaded===id)return engine;
   $("bar").style.display="block";
   const cb=r=>{$("status").textContent=r.text;$("bar").firstChild.style.width=Math.round((r.progress||0)*100)+"%"};
-  if(!engine){
-    const w=new Worker(URL.createObjectURL(new Blob([workerSrc],{type:"text/javascript"})),{type:"module"});
-    engine=await CreateWebWorkerMLCEngine(w,id,{initProgressCallback:cb});
-  }else{
-    engine.setInitProgressCallback(cb);
-    await engine.reload(id);
-  }
-  loadedModel=id;$("bar").style.display="none";$("status").textContent="Model ready: "+id;
-  return engine;
+  if(!engine){const w=new Worker(URL.createObjectURL(new Blob([workerSrc],{type:"text/javascript"})),{type:"module"});engine=await CreateWebWorkerMLCEngine(w,id,{initProgressCallback:cb})}
+  else{engine.setInitProgressCallback(cb);await engine.reload(id)}
+  loaded=id;$("bar").style.display="none";$("status").textContent="Model ready";return engine;
 }
-const SYS="You are an expert front-end developer. Reply with ONE complete, self-contained HTML document (inline CSS and JS, no external files, fonts, images or CDN links; use CSS gradients or inline SVG for visuals). Make it responsive and attractive. If existing code is provided, apply the requested change and return the full updated document. Output only the code in a single ```html block, with no explanation.";
+const SYS="You are a senior web designer and front-end developer. Write ONE complete, working, self-contained HTML5 page. Rules: put all CSS in a <style> tag and any JavaScript in a <script> tag; no external files, fonts, images or CDN links (use CSS gradients, emoji or inline SVG for visuals); mobile-friendly layout with flexbox or grid; a clear colour palette, good spacing and readable type; real, specific copy instead of lorem ipsum; include a header or nav, a hero, two or three content sections and a footer unless the request says otherwise; make buttons and forms actually work. If existing code is given, return the full updated page with the requested change. Reply with only a ```html code block that starts with <!DOCTYPE html>. No explanations.";
 async function generate(){
-  const p=$("prompt").value.trim();
-  if(!p||busy)return;
-  busy=true;$("btnGen").disabled=true;$("btnStop").disabled=false;
-  say("You: "+p,"u");
+  const p=$("prompt").value.trim();if(!p||busy)return;
+  busy=true;$("send").disabled=true;$("btnStop").disabled=false;
+  const ch=cur(),backup=ch.code;
+  if($("hello"))$("hello").remove();
+  if(ch.title==="New chat"){ch.title=p.slice(0,34);$("title").textContent=ch.title}
+  say(p,"u");$("prompt").value="";
   try{
     const e=await ensureEngine();
-    const hasCode=S.code!==DEFAULT_HTML;
-    const user=hasCode?"Current code:\n```html\n"+S.code.slice(0,6000)+"\n```\n\nRequest: "+p:p;
-    S.chat.push({role:"user",content:p});S.chat=S.chat.slice(-20);
-    $("status").textContent="Generating...";
-    const out=say("Building...");
-    const stream=await e.chat.completions.create({messages:[{role:"system",content:SYS},{role:"user",content:user}],stream:true,temperature:0.4,max_tokens:3500});
-    let acc="",n=0;
+    const edit=ch.code!==EMPTY&&ch.code.length<=3500;
+    const out=say("Building…");const live=$("log").lastChild;
+    if(ch.code!==EMPTY&&!edit)live.textContent="This page is too large to edit with the model's memory, so I'm building a new one. Building…";
+    $("status").textContent="Generating…";
+    const user=edit?"Current page:\n```html\n"+ch.code+"\n```\n\nChange to make: "+p:"Build this website: "+p;
+    const stream=await e.chat.completions.create({messages:[{role:"system",content:SYS},{role:"user",content:user}],stream:true,temperature:0.3,top_p:0.9,repetition_penalty:1.05,max_tokens:2200,stop:["</html>"]});
+    let acc="",n=0,stuck=false;
     for await(const c of stream){
       acc+=c.choices[0]?.delta?.content||"";
-      if(++n%6===0){const h=extractHtml(acc);if(h.length>40)setCode(h);out.textContent="Building... "+acc.length+" characters"}
+      if(++n%6===0){const h=extractHtml(acc);if(h.length>40){ch.code=finalize(h);render();live.textContent="Building… "+acc.length+" characters"}
+        if(n%24===0&&looping(acc)){stuck=true;e.interruptGenerate();break}}
     }
-    const h=extractHtml(acc);
-    if(h.length>40){setCode(h,true);out.textContent="Done. Ask for changes and I will update the page."}
-    else out.textContent="The model returned no usable code. Try a simpler prompt or a larger model.";
-    S.chat.push({role:"assistant",content:"(generated page)"});save();
-    $("status").textContent="Ready";$("prompt").value="";S.prompt="";
+    const h=extractHtml(acc);let msg;
+    if(h.length>200&&!stuck){setCode(finalize(h),true);msg={r:"a",t:"Done. Ask for changes, or press Publish Live to put it online."}}
+    else{ch.code=backup;render(true);msg={r:"e",t:stuck?"The model got stuck repeating itself, so I kept your previous page. Try a more specific prompt or the Qwen 1.5B model.":"The model did not return a usable page, so I kept your previous page. Try rewording your request or use a larger model."}}
+    ch.msgs[ch.msgs.length-1]=msg;live.className="m "+msg.r;live.textContent=msg.t;save();$("status").textContent="Ready";
   }catch(err){
-    say("Error: "+(err&&err.message||err),"e");$("status").textContent="Failed";$("bar").style.display="none";
+    ch.code=backup;render(true);say("Error: "+(err&&err.message||err),"e");$("status").textContent="Failed";$("bar").style.display="none";
     if(/memory|OOM|device lost|allocation/i.test(String(err.message)))say("The model ran out of memory. Pick a lighter model.","e");
   }
-  busy=false;$("btnGen").disabled=false;$("btnStop").disabled=true;
+  busy=false;$("send").disabled=false;$("btnStop").disabled=true;
 }
-$("btnGen").onclick=generate;
-$("btnStop").onclick=()=>{if(engine)engine.interruptGenerate()};
-$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();generate()}});
-$("prompt").addEventListener("input",()=>{S.prompt=$("prompt").value;save()});
+$("send").onclick=generate;$("btnStop").onclick=()=>engine&&engine.interruptGenerate();
+$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey||!e.shiftKey)){e.preventDefault();generate()}});
 $("model").addEventListener("change",()=>{S.model=$("model").value;updWarn();save()});
 
-/* ---------- Tabs / editing ---------- */
-function tab(code){
-  $("frame").style.display=code?"none":"block";$("code").style.display=code?"block":"none";
-  $("tPrev").classList.toggle("on",!code);$("tCode").classList.toggle("on",code);
-  if(code)$("code").value=S.code;else render(true);
-}
+/* ----- tabs / export ----- */
+function tab(code){$("frame").style.display=code?"none":"block";$("code").style.display=code?"block":"none";$("tPrev").classList.toggle("on",!code);$("tCode").classList.toggle("on",code);if(code)$("code").value=cur().code;else render(true)}
 $("tPrev").onclick=()=>tab(false);$("tCode").onclick=()=>tab(true);
-$("code").addEventListener("input",()=>{S.code=$("code").value;save()});
+$("code").addEventListener("input",()=>{cur().code=$("code").value;save()});
+$("btnDl").onclick=()=>{const u=URL.createObjectURL(new Blob([cur().code],{type:"text/html"})),a=document.createElement("a");a.href=u;a.download="index.html";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)};
 
-/* ---------- Export ---------- */
-$("btnDl").onclick=()=>{
-  const url=URL.createObjectURL(new Blob([S.code],{type:"text/html"}));
-  const a=document.createElement("a");a.href=url;a.download="index.html";document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),2000);
-};
-
-/* ---------- Publish ---------- */
-function b64(str){const b=new TextEncoder().encode(str);let s="";for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}
-function showModal(){$("repo").value=S.repo;$("token").value=S.token;$("modal").classList.add("show");$("repo").focus()}
-$("btnSettings").onclick=()=>{publishAfter=false;showModal()};
+/* ----- publish ----- */
+function b64(s){const b=new TextEncoder().encode(s);let o="";for(let i=0;i<b.length;i+=0x8000)o+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(o)}
+let after=false;
+function showModal(){$("repo").value=S.repo;$("token").value=S.token;$("modal").classList.add("show");(S.repo&&!S.token?$("token"):$("repo")).focus()}
+$("btnSettings").onclick=()=>{after=false;$("drawer").classList.remove("show");showModal()};
 $("mCancel").onclick=()=>$("modal").classList.remove("show");
-let publishAfter=false;
-$("mSave").onclick=()=>{
+$("mSave").onclick=async()=>{
   const r=$("repo").value.trim().replace(/^https?:\/\/github\.com\//,"").replace(/\.git$/,"").replace(/^\/|\/$/g,""),t=$("token").value.trim();
-  if(!/^[\w.-]+\/[\w.-]+$/.test(r)||!t){toast("Enter the repository as owner/name and paste a token.");return}
-  S.repo=r;S.token=t;save();$("modal").classList.remove("show");
-  if(publishAfter)publish();
+  if(!/^[\w.-]+\/[\w.-]+$/.test(r)||!t)return toast("Enter the repository as owner/name and paste a token.");
+  const b=$("mSave");b.disabled=true;b.textContent="Checking…";
+  try{
+    const H={Authorization:"Bearer "+t,Accept:"application/vnd.github+json"};
+    const g=await fetch("https://api.github.com/repos/"+r,{headers:H});
+    if(g.status===401)throw new Error("GitHub rejected that token. Generate a new one and paste it again.");
+    if(g.status===404)throw new Error("Repository not found, or the token can't see it. Check the owner/name.");
+    const j=await g.json();
+    if(j.permissions&&!j.permissions.push)throw new Error("This token can't write to that repo.");
+    const p=await fetch("https://api.github.com/repos/"+r+"/pages",{headers:H});
+    if(p.status===404)await fetch("https://api.github.com/repos/"+r+"/pages",{method:"POST",headers:{...H,"Content-Type":"application/json"},body:JSON.stringify({source:{branch:j.default_branch||"main",path:"/"}})}).catch(()=>{});
+    S.repo=r;S.token=t;save();$("modal").classList.remove("show");
+    if(after)publish();else toast("Connected. Publish Live now works with one click.");
+  }catch(err){toast(esc(err.message),8000)}
+  b.disabled=false;b.textContent="Save";
 };
 async function publish(){
-  if(!S.token||!S.repo){publishAfter=true;showModal();return}
-  if(S.code===DEFAULT_HTML){toast("Generate a page before publishing.");return}
-  $("btnPub").disabled=true;$("btnPub").textContent="Publishing...";
+  if(!S.token||!S.repo){after=true;return showModal()}
+  const ch=cur();if(ch.code===EMPTY)return toast("Build a page first, then publish it.");
+  const btn=$("btnPub");btn.disabled=true;btn.textContent="Publishing…";
   try{
-    const [owner,repo]=S.repo.split("/");
-    let done=null;
+    const [owner,repo]=S.repo.split("/"),api=f=>`https://api.github.com/repos/${owner}/${repo}/contents/${f}/index.html`;
+    const H={Authorization:"Bearer "+S.token,Accept:"application/vnd.github+json","Content-Type":"application/json"};
+    if(ch.repo!==S.repo)ch.folder="";
+    let folder=ch.folder,sha,done="";
+    if(folder){const g=await fetch(api(folder),{headers:H});if(g.ok)sha=(await g.json()).sha;else if(g.status===404)folder=""}
     for(let i=0;i<5&&!done;i++){
-      const folder=String(1000+Math.floor(Math.random()*9000));
-      const res=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}/index.html`,{
-        method:"PUT",
-        headers:{Authorization:"Bearer "+S.token,Accept:"application/vnd.github+json","Content-Type":"application/json"},
-        body:JSON.stringify({message:"Publish site "+folder,content:b64(S.code)})
-      });
-      if(res.ok){done=folder;break}
-      if(res.status===422)continue; // folder already exists, try another number
+      const f=folder||String(1000+Math.floor(Math.random()*9000));
+      const res=await fetch(api(f),{method:"PUT",headers:H,body:JSON.stringify({message:(sha?"Update site ":"Publish site ")+f,content:b64(ch.code),...(sha?{sha}:{})})});
+      if(res.ok){done=f;break}
+      if(res.status===422&&!folder)continue;
       const j=await res.json().catch(()=>({}));
-      if(res.status===401||res.status===403||res.status===404){S.token="";save()}
-      throw new Error((j.message||"GitHub error "+res.status)+(res.status===401?" (token rejected, enter a new one)":res.status===404?" (repository not found, or token lacks access)":""));
+      if(res.status===401)S.token="";
+      throw new Error((j.message||"GitHub error "+res.status)+(res.status===401?" (token rejected, enter a new one)":res.status===404?" (repo not found, or the token lacks access)":""));
     }
     if(!done)throw new Error("Could not find a free folder number. Try again.");
     const base=repo.toLowerCase()===(owner+".github.io").toLowerCase()?`https://${owner}.github.io/`:`https://${owner}.github.io/${repo}/`;
-    const url=base+done+"/";
-    toast(`Published. GitHub Pages can take a minute to go live:<br><a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>`,30000);
-    say("Published: "+url);
-  }catch(err){toast("Publish failed: "+esc(err.message),9000)}
-  $("btnPub").disabled=false;$("btnPub").textContent="Publish Live";
+    const wasLive=!!ch.url;ch.folder=done;ch.repo=S.repo;ch.url=base+done+"/";save();liveChip();
+    say(wasLive?"Updated. GitHub Pages may take a minute to refresh:":"Published. GitHub Pages can take a minute to go live:","a",ch.url);
+    toast("Published: <a href=\""+esc(ch.url)+"\" target=\"_blank\" rel=\"noopener\">"+esc(ch.url)+"</a>",20000);
+  }catch(err){save();toast("Publish failed: "+esc(err.message),9000)}
+  btn.disabled=false;btn.textContent="Publish Live";
 }
-$("btnPub").onclick=()=>{publishAfter=false;publish()};
+$("btnPub").onclick=()=>{after=false;publish()};
 
-/* ---------- New project ---------- */
-$("btnClear").onclick=()=>{if(confirm("Clear the current project? Download it first if you want to keep it.")){S.code=DEFAULT_HTML;S.chat=[];$("log").innerHTML="";setCode(DEFAULT_HTML,true)}};
-
-/* ---------- Restore ---------- */
+/* ----- start ----- */
 $("model").value=S.model;if(!$("model").value)$("model").selectedIndex=0;
-$("prompt").value=S.prompt||"";
-updWarn();render(true);
-if(S.code!==DEFAULT_HTML)say("Restored your last project. Ask for changes or start a new one.");
+updWarn();showChat();
 if(!navigator.gpu)say("WebGPU is not available in this browser, so the AI can't run here. You can still edit code in the Code tab, download it and publish it.","e");
 </script>
 </body>

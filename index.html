@@ -67,6 +67,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .box h2{margin:0;font:600 20px Georgia,serif}.box p{margin:0;color:var(--mute);font-size:13px}
 .box label{font-size:12px;color:var(--mute);display:block;margin-bottom:3px}
 .box input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px}
+#note{padding:0 14px 6px;font-size:12px;color:var(--mute)}
+.opt{text-align:left;padding:10px 12px;width:100%}.opt small{display:block;color:var(--mute);font-size:12px}
 .row{display:flex;gap:8px}.row>*{flex:1}
 @media(max-width:800px){body{flex-direction:column;overflow:auto}#chat{width:100%;max-width:none;height:85vh;border-right:0;border-bottom:1px solid var(--line)}#right{min-height:75vh}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -85,14 +87,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div id="warn" role="alert">⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.</div>
   <div id="bar"><i></i></div>
   <div id="status"></div>
+  <div id="note">Small models are fine for simple pages. Games, apps and anything with moving parts or logic need much bigger models (3B or larger), and may still take a few tries.</div>
   <div id="comp">
     <textarea id="prompt" placeholder="Describe the site you want, or what to change…" aria-label="Prompt"></textarea>
     <div id="cbar">
       <select id="model" aria-label="Model" title="⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.">
-        <option value="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC" data-heavy="0">Recommended: Qwen2.5 Coder 1.5B (~1.1 GB)</option>
+        <option value="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC" data-heavy="0">Simple pages: Qwen2.5 Coder 1.5B (~1.1 GB)</option>
         <option value="SmolLM2-360M-Instruct-q4f16_1-MLC" data-heavy="0">Draft only: SmolLM2 360M (rough results)</option>
-        <option value="Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 3B (~2.5 GB)</option>
-        <option value="Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 7B (~5 GB)</option>
+        <option value="Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 3B (~2.5 GB), for games and apps</option>
+        <option value="Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 7B (~5 GB), best quality</option>
       </select>
       <button id="btnStop" disabled>Stop</button>
       <button id="send" class="primary" title="Send (Ctrl+Enter)" aria-label="Send">↑</button>
@@ -111,6 +114,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div><label for="repo">Repository (owner/name)</label><input id="repo" autocomplete="off"></div>
     <div><label for="token">GitHub token</label><input id="token" type="password" placeholder="github_pat_…" autocomplete="off"></div>
     <div class="row"><button id="mCancel">Cancel</button><button id="mSave" class="primary">Save</button></div>
+  </div>
+</div>
+<div id="pubmodal" class="modalwrap" role="dialog" aria-modal="true" aria-labelledby="pt" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:10;padding:16px">
+  <div class="box">
+    <h2 id="pt">Publish this page</h2>
+    <p>Pick a free way to get a link. The first two need no account.</p>
+    <button class="opt primary" id="pHtmlPub">Paste into HTML Pub<small>Copies your code and opens the site. Paste, press Publish, get a link (5 free pages).</small></button>
+    <button class="opt" id="pShare">Drop the file on sharable.link<small>Downloads index.html and opens the site. Drag the file onto the page.</small></button>
+    <button class="opt" id="pGit">Publish to my GitHub repo<small>Permanent link on your own site. Needs a one-time token.</small></button>
+    <button id="pClose">Cancel</button>
   </div>
 </div>
 <div id="toast" role="status"></div>
@@ -158,7 +171,7 @@ function say(t,r,url){const m={r:r||"a",t,url};const c=cur();c.msgs.push(m);c.ms
 const CHIPS=["A landing page for a bike repair shop with prices and a contact form","A personal portfolio with a dark theme and project cards","A to-do list app that saves tasks in the browser"];
 function showChat(){
   const c=cur();$("title").textContent=c.title;$("log").innerHTML="";
-  if(!c.msgs.length){const h=document.createElement("div");h.id="hello";h.innerHTML="<h2>What shall we build?</h2>Describe a website and it appears on the right. Publish it when you like it.";
+  if(!c.msgs.length){const h=document.createElement("div");h.id="hello";h.innerHTML="<h2>What shall we build?</h2>Describe a website and it appears on the right. Simple pages work on small models. Games and interactive apps need much bigger models.";
     const w=document.createElement("div");w.className="chips";CHIPS.forEach(t=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{$("prompt").value=t;$("prompt").focus()};w.append(b)});h.append(w);$("log").append(h)}
   else c.msgs.forEach(bubble);
   last="";render(true);if($("code").style.display==="block")$("code").value=c.code;liveChip();
@@ -201,6 +214,7 @@ async function generate(){
   say(p,"u");$("prompt").value="";
   try{
     const e=await ensureEngine();
+    if(/\b(game|snake|tetris|pong|chess|calculator|quiz|todo|to-do|app|dashboard|timer|tracker)\b/i.test(p)&&$("model").selectedOptions[0].dataset.heavy!=="1")say("Heads up: games and apps need much bigger models than this one. I'll try, but the result may not work. The 3B model or larger is far more reliable.");
     const edit=ch.code!==EMPTY&&ch.code.length<=3500;
     const out=say("Building…");const live=$("log").lastChild;
     if(ch.code!==EMPTY&&!edit)live.textContent="This page is too large to edit with the model's memory, so I'm building a new one. Building…";
@@ -284,7 +298,16 @@ async function publish(){
   }catch(err){save();toast("Publish failed: "+esc(err.message),9000)}
   btn.disabled=false;btn.textContent="Publish Live";
 }
-$("btnPub").onclick=()=>{after=false;publish()};
+const pm=$("pubmodal");
+function checkReady(){if(cur().code===EMPTY){toast("Build a page first, then publish it.");return false}return true}
+$("btnPub").onclick=()=>{if(checkReady())pm.style.display="flex"};
+$("pClose").onclick=()=>pm.style.display="none";
+$("pHtmlPub").onclick=()=>{
+  navigator.clipboard.writeText(cur().code).then(()=>toast("Code copied. Paste it into the box on HTML Pub and press Publish.",9000),()=>toast("Couldn't copy automatically. Use Download Code, then open the file and paste its text.",9000));
+  window.open("https://htmlpub.com/publish-html-online","_blank","noopener");pm.style.display="none";
+};
+$("pShare").onclick=()=>{$("btnDl").click();toast("Saved as index.html. Drag it onto the sharable.link page that just opened.",9000);window.open("https://sharable.link/free-html-hosting","_blank","noopener");pm.style.display="none"};
+$("pGit").onclick=()=>{pm.style.display="none";after=false;publish()};
 
 /* ----- start ----- */
 $("model").value=S.model;if(!$("model").value)$("model").selectedIndex=0;

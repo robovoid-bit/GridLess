@@ -1,793 +1,244 @@
-<html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serverless AI Web Builder Pro</title>
-    <style>
-        :root {
-            --bg-page: #09090b;
-            --bg-panel: #141417;
-            --bg-surface: #1f1f23;
-            --bg-input: #111113;
-            --border-primary: #27272a;
-            --border-accent: #3f3f46;
-            --text-main: #f4f4f5;
-            --text-muted: #a1a1aa;
-            
-            --accent-glow: rgba(99, 102, 241, 0.15);
-            --accent: #6366f1;
-            --accent-hover: #4f46e5;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            
-            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            --font-mono: "JetBrains Mono", "Fira Code", SFMono-Regular, Consolas, Courier, monospace;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: var(--font-stack);
-            -webkit-font-smoothing: antialiased;
-        }
-
-        body {
-            background-color: var(--bg-page);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* Top Header Component */
-        header {
-            background-color: var(--bg-panel);
-            border-bottom: 1px solid var(--border-primary);
-            padding: 0.75rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .brand-icon {
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, #818cf8, #6366f1);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        .brand h1 {
-            font-size: 1rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            background: linear-gradient(to right, #ffffff, #d4d4d8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .brand span {
-            font-weight: 400;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-left: 0.25rem;
-        }
-
-        .engine-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            background-color: var(--bg-input);
-            padding: 0.35rem 0.75rem;
-            border-radius: 9999px;
-            border: 1px solid var(--border-primary);
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            background-color: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--success);
-        }
-
-        /* Indeterminate Progress Bar */
-        .progress-container {
-            width: 100%;
-            height: 2px;
-            background-color: var(--bg-panel);
-            position: relative;
-            overflow: hidden;
-            display: none;
-        }
-
-        .progress-bar {
-            width: 40%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            position: absolute;
-            animation: streamingProgress 1.5s infinite ease-in-out;
-            left: -40%;
-        }
-
-        @keyframes streamingProgress {
-            0% { left: -40%; }
-            100% { left: 100%; }
-        }
-
-        /* Core Workspace Layout Split Panels */
-        .workspace {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .sidebar {
-            width: 420px;
-            min-width: 380px;
-            max-width: 480px;
-            background-color: var(--bg-panel);
-            border-right: 1px solid var(--border-primary);
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
-            gap: 1.5rem;
-            overflow-y: auto;
-        }
-
-        .canvas-area {
-            flex: 1;
-            background-color: var(--bg-page);
-            display: flex;
-            flex-direction: column;
-            padding: 1rem;
-        }
-
-        .canvas-container {
-            flex: 1;
-            background-color: #ffffff;
-            border-radius: 12px;
-            border: 1px solid var(--border-primary);
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .canvas-header {
-            background-color: var(--bg-panel);
-            border-bottom: 1px solid var(--border-primary);
-            padding: 0.5rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .canvas-title {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            background: var(--bg-input);
-            padding: 0.25rem 0.6rem;
-            border-radius: 4px;
-            border: 1px solid var(--border-primary);
-        }
-
-        .preview-frame {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            border: none;
-            background-color: #ffffff;
-        }
-
-        /* Controls, Form Components & Typography */
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group label {
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        select, textarea, input {
-            width: 100%;
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-primary);
-            color: var(--text-main);
-            border-radius: 8px;
-            padding: 0.75rem;
-            font-size: 0.9rem;
-            outline: none;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        select:hover, textarea:hover, input:hover {
-            border-color: var(--border-accent);
-        }
-
-        select:focus, textarea:focus, input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px var(--accent-glow);
-        }
-
-        textarea {
-            resize: none;
-            height: 140px;
-            line-height: 1.6;
-        }
-
-        .warning-banner {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.03));
-            border: 1px solid rgba(245, 158, 11, 0.2);
-            border-radius: 8px;
-            padding: 0.75rem;
-            font-size: 0.75rem;
-            color: var(--warning);
-            line-height: 1.5;
-            display: none;
-        }
-
-        /* Clean Unified Button Grid Block */
-        .action-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.25rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            width: 100%;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-
-        .btn-secondary {
-            background-color: var(--bg-surface);
-            color: var(--text-main);
-            border: 1px solid var(--border-primary);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background-color: var(--border-primary);
-            border-color: var(--border-accent);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Realtime Output Code Terminal Inspector Window */
-        .inspector-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            min-height: 200px;
-        }
-
-        .terminal {
-            flex: 1;
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-primary);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: #34d399;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            word-break: break-all;
-            line-height: 1.5;
-        }
-
-        /* Fluid Layout Modal Overlay Panels Setup */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .overlay.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .dialog {
-            background-color: var(--bg-panel);
-            border: 1px solid var(--border-primary);
-            border-radius: 12px;
-            width: 460px;
-            max-width: 90%;
-            padding: 1.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            transform: scale(0.95);
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-        }
-
-        .overlay.visible .dialog {
-            transform: scale(1);
-        }
-
-        .dialog-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .dialog-text {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
-        .dialog-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.75rem;
-        }
-
-        /* Toast Context Alerts Management System Component */
-        .toast-bus {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            padding: 0.85rem 1.25rem;
-            border-radius: 8px;
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-primary);
-            border-left: 4px solid var(--accent);
-            color: var(--text-main);
-            font-size: 0.85rem;
-            font-weight: 500;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-            transform: translateY(150%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .toast-bus.visible {
-            transform: translateY(0);
-        }
-
-        .toast-bus.success { border-left-color: var(--success); }
-        .toast-bus.error { border-left-color: var(--danger); }
-    </style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local AI Web Builder</title>
+<style>
+:root{--bg:#14161a;--panel:#1b1e24;--panel2:#23272f;--line:#2f343e;--text:#e6e8ec;--mute:#9aa1ad;--acc:#5eead4;--accd:#0f3d38;--warn:#f5b84b;--err:#ff7a7a}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex}
+button,select,textarea,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:8px 12px}
+button:hover{border-color:var(--acc)}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button.primary{background:var(--acc);color:#06201c;border-color:var(--acc);font-weight:600}
+button:disabled{opacity:.5;cursor:not-allowed}
+#left{width:380px;min-width:300px;max-width:45%;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px;gap:10px;overflow:auto}
+#right{flex:1;display:flex;flex-direction:column;min-width:0}
+h1{font-size:16px;margin:0;display:flex;justify-content:space-between;align-items:center}
+label{color:var(--mute);font-size:12px;display:block;margin-bottom:4px}
+select,textarea,input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{resize:vertical;min-height:110px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.warn{background:#3a2d12;border:1px solid var(--warn);color:var(--warn);border-radius:8px;padding:8px;font-size:12px;display:none}
+.warn.show{display:block}
+#status{font-size:12px;color:var(--mute);min-height:18px}
+#bar{height:6px;background:var(--bg);border-radius:4px;overflow:hidden;display:none}
+#bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+#log{flex:1;min-height:80px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);font-size:13px}
+#log p{margin:0 0 8px}#log .u{color:var(--acc)}#log .e{color:var(--err)}
+#tabs{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);align-items:center}
+#tabs button.on{background:var(--accd);border-color:var(--acc)}
+#tabs span{margin-left:auto;color:var(--mute);font-size:12px}
+#frame{flex:1;border:0;background:#fff;width:100%}
+#code{flex:1;display:none;resize:none;border-radius:0;border:0;background:var(--bg);font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre;tab-size:2}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--acc);padding:10px 14px;border-radius:8px;display:none;max-width:90%;z-index:9;word-break:break-all}
+#toast a{color:var(--acc)}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+#modal.show{display:flex}
+#modal .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;width:100%;max-width:440px;display:flex;flex-direction:column;gap:10px}
+#modal h2{margin:0;font-size:16px}#modal p{margin:0;color:var(--mute);font-size:13px}
+@media(max-width:800px){body{flex-direction:column;overflow:auto}#left{width:100%;max-width:none;border-right:0;border-bottom:1px solid var(--line)}#right{min-height:70vh}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
 </head>
 <body>
+<aside id="left">
+  <h1>AI Web Builder <button id="btnSettings" title="GitHub publishing settings">Settings</button></h1>
+  <div>
+    <label for="model">Model (runs in your browser, needs WebGPU)</label>
+    <select id="model" title="⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.">
+      <option value="SmolLM2-360M-Instruct-q4f16_1-MLC" data-heavy="0">Light: SmolLM2 360M (~0.4 GB)</option>
+      <option value="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC" data-heavy="0">Balanced: Qwen2.5 Coder 1.5B (~1.1 GB)</option>
+      <option value="Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 3B (~2.5 GB)</option>
+      <option value="Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 7B (~5 GB)</option>
+    </select>
+  </div>
+  <div id="warn" class="warn" role="alert">⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.</div>
+  <div id="bar"><i></i></div>
+  <div id="status">Model downloads once, then is cached in your browser.</div>
+  <div id="log" aria-live="polite"></div>
+  <div>
+    <label for="prompt">What should I build or change?</label>
+    <textarea id="prompt" placeholder="A landing page for a bike repair shop with a pricing table and a contact form"></textarea>
+  </div>
+  <div class="row"><button id="btnGen" class="primary">Generate</button><button id="btnStop" disabled>Stop</button></div>
+  <div class="row"><button id="btnDl">Download Code</button><button id="btnPub">Publish Live</button></div>
+  <button id="btnClear">Start new project</button>
+</aside>
+<main id="right">
+  <div id="tabs"><button id="tPrev" class="on">Preview</button><button id="tCode">Code</button><span id="saved"></span></div>
+  <iframe id="frame" title="Live preview" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
+  <textarea id="code" spellcheck="false" aria-label="Generated code"></textarea>
+</main>
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+  <div class="box">
+    <h2 id="mt">Connect GitHub to publish</h2>
+    <p>Paste a GitHub personal access token with write access to Contents, and the repository that has GitHub Pages turned on. Both are stored only in this browser's local storage and are sent only to api.github.com.</p>
+    <div><label for="repo">Repository (owner/name)</label><input id="repo" placeholder="robovoid-bit/testsite" autocomplete="off"></div>
+    <div><label for="token">GitHub token</label><input id="token" type="password" placeholder="github_pat_..." autocomplete="off"></div>
+    <div class="row"><button id="mCancel">Cancel</button><button id="mSave" class="primary">Save and publish</button></div>
+  </div>
+</div>
+<div id="toast" role="status"></div>
 
-    <header>
-        <div class="brand">
-            <div class="brand-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            </div>
-            <h1>AuraBuilder <span>AI Workspace</span></h1>
-        </div>
-        <div class="engine-status">
-            <div class="status-dot" id="statusIndicator"></div>
-            <span id="statusLabel">Workspace Engine Standby</span>
-        </div>
-    </header>
+<script type="module">
+import {CreateWebWorkerMLCEngine} from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm";
 
-    <div class="progress-container" id="progressBar">
-        <div class="progress-bar"></div>
-    </div>
+const $=id=>document.getElementById(id);
+const KEY="aiwb.v1";
+const DEFAULT_HTML='<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#f4f4f5;color:#333;text-align:center}</style></head><body><div><h2>Your page appears here</h2><p>Describe a site on the left and press Generate.</p></div></body></html>';
+let S={code:DEFAULT_HTML,prompt:"",model:$("model").value,token:"",repo:"",chat:[]};
+try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){}
+let saveT=0;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S));$("saved").textContent="Saved locally"}catch(e){$("saved").textContent="Storage full"}},300)}
 
-    <div class="workspace">
-        <!-- Control and Configuration Panel Component Layout -->
-        <aside class="sidebar">
-            <div class="form-group">
-                <label for="modelSelector">Neural Engine Optimization Profile</label>
-                <select id="modelSelector">
-                    <option value="chromebook-core">HTML5 Local Vector Matrix (Chromebook Optimized)</option>
-                    <option value="neural-1b" data-alert="true">Web-LLM Neural Foundation 1.5B Core</option>
-                    <option value="neural-7b" data-alert="true">Web-LLM Deep Neural 7B Production Engine</option>
-                </select>
-                <div class="warning-banner" id="warningBanner">
-                    ⚠️ Running deep neural networks locally requires high memory allocations. This may lock runtime frames or crash browser execution tabs on low-spec client machines.
-                </div>
-            </div>
+/* ---------- Preview ---------- */
+let prevT=0,lastRender="";
+function render(force){
+  const go=()=>{if(S.code!==lastRender){lastRender=S.code;$("frame").srcdoc=S.code}};
+  if(force){clearTimeout(prevT);prevT=0;go();return}
+  if(!prevT)prevT=setTimeout(()=>{prevT=0;go()},500);
+}
+function setCode(c,force){S.code=c;if($("code").style.display==="block"&&document.activeElement!==$("code"))$("code").value=c;render(force);save()}
+function extractHtml(t){
+  let m=t.match(/```(?:html)?\s*\n?([\s\S]*?)(?:```|$)/i);
+  let h=m?m[1]:t;
+  const i=h.search(/<!DOCTYPE|<html/i);
+  if(i>0)h=h.slice(i);
+  return h.trim();
+}
 
-            <div class="form-group">
-                <label for="promptInput">Component Architecture Objectives</label>
-                <textarea id="promptInput" placeholder="Describe the layout structure, specific features, interaction modules, or aesthetic properties for the target application context..."></textarea>
-            </div>
+/* ---------- Log / status ---------- */
+function say(t,cls){const p=document.createElement("p");if(cls)p.className=cls;p.textContent=t;$("log").appendChild(p);$("log").scrollTop=1e9;return p}
+function toast(html,ms){const t=$("toast");t.innerHTML=html;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",ms||6000)}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 
-            <div class="action-layout">
-                <button class="btn btn-primary" id="generateBtn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                    Construct Core Application
-                </button>
-                <div class="btn-group">
-                    <button class="btn btn-secondary" id="exportBtn">Export Code</button>
-                    <button class="btn btn-secondary" id="publishBtn">Publish Live</button>
-                </div>
-            </div>
+/* ---------- Model + worker (all inference runs off the UI thread) ---------- */
+let engine=null,loadedModel=null,busy=false;
+const workerSrc='import {WebWorkerMLCEngineHandler} from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm";const h=new WebWorkerMLCEngineHandler();self.onmessage=m=>h.onmessage(m);';
+function updWarn(){$("warn").classList.toggle("show",$("model").selectedOptions[0].dataset.heavy==="1")}
+async function ensureEngine(){
+  if(!navigator.gpu)throw new Error("This browser has no WebGPU. Use a recent Chrome or Edge, and check chrome://gpu.");
+  const id=$("model").value;
+  if(engine&&loadedModel===id)return engine;
+  $("bar").style.display="block";
+  const cb=r=>{$("status").textContent=r.text;$("bar").firstChild.style.width=Math.round((r.progress||0)*100)+"%"};
+  if(!engine){
+    const w=new Worker(URL.createObjectURL(new Blob([workerSrc],{type:"text/javascript"})),{type:"module"});
+    engine=await CreateWebWorkerMLCEngine(w,id,{initProgressCallback:cb});
+  }else{
+    engine.setInitProgressCallback(cb);
+    await engine.reload(id);
+  }
+  loadedModel=id;$("bar").style.display="none";$("status").textContent="Model ready: "+id;
+  return engine;
+}
+const SYS="You are an expert front-end developer. Reply with ONE complete, self-contained HTML document (inline CSS and JS, no external files, fonts, images or CDN links; use CSS gradients or inline SVG for visuals). Make it responsive and attractive. If existing code is provided, apply the requested change and return the full updated document. Output only the code in a single ```html block, with no explanation.";
+async function generate(){
+  const p=$("prompt").value.trim();
+  if(!p||busy)return;
+  busy=true;$("btnGen").disabled=true;$("btnStop").disabled=false;
+  say("You: "+p,"u");
+  try{
+    const e=await ensureEngine();
+    const hasCode=S.code!==DEFAULT_HTML;
+    const user=hasCode?"Current code:\n```html\n"+S.code.slice(0,6000)+"\n```\n\nRequest: "+p:p;
+    S.chat.push({role:"user",content:p});S.chat=S.chat.slice(-20);
+    $("status").textContent="Generating...";
+    const out=say("Building...");
+    const stream=await e.chat.completions.create({messages:[{role:"system",content:SYS},{role:"user",content:user}],stream:true,temperature:0.4,max_tokens:3500});
+    let acc="",n=0;
+    for await(const c of stream){
+      acc+=c.choices[0]?.delta?.content||"";
+      if(++n%6===0){const h=extractHtml(acc);if(h.length>40)setCode(h);out.textContent="Building... "+acc.length+" characters"}
+    }
+    const h=extractHtml(acc);
+    if(h.length>40){setCode(h,true);out.textContent="Done. Ask for changes and I will update the page."}
+    else out.textContent="The model returned no usable code. Try a simpler prompt or a larger model.";
+    S.chat.push({role:"assistant",content:"(generated page)"});save();
+    $("status").textContent="Ready";$("prompt").value="";S.prompt="";
+  }catch(err){
+    say("Error: "+(err&&err.message||err),"e");$("status").textContent="Failed";$("bar").style.display="none";
+    if(/memory|OOM|device lost|allocation/i.test(String(err.message)))say("The model ran out of memory. Pick a lighter model.","e");
+  }
+  busy=false;$("btnGen").disabled=false;$("btnStop").disabled=true;
+}
+$("btnGen").onclick=generate;
+$("btnStop").onclick=()=>{if(engine)engine.interruptGenerate()};
+$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();generate()}});
+$("prompt").addEventListener("input",()=>{S.prompt=$("prompt").value;save()});
+$("model").addEventListener("change",()=>{S.model=$("model").value;updWarn();save()});
 
-            <div class="inspector-panel">
-                <div class="form-group" style="height: 100%; display: flex; flex-direction: column;">
-                    <label>Realtime Token Frame Viewport</label>
-                    <div class="terminal" id="terminalView">&lt;!-- Stream output container active state log --&gt;</div>
-                </div>
-            </div>
-        </aside>
+/* ---------- Tabs / editing ---------- */
+function tab(code){
+  $("frame").style.display=code?"none":"block";$("code").style.display=code?"block":"none";
+  $("tPrev").classList.toggle("on",!code);$("tCode").classList.toggle("on",code);
+  if(code)$("code").value=S.code;else render(true);
+}
+$("tPrev").onclick=()=>tab(false);$("tCode").onclick=()=>tab(true);
+$("code").addEventListener("input",()=>{S.code=$("code").value;save()});
 
-        <!-- Live Sandbox Application Viewport Space -->
-        <main class="canvas-area">
-            <div class="canvas-container">
-                <div class="canvas-header">
-                    <div class="canvas-title" id="canvasPath">sandbox://runtime/index.html</div>
-                </div>
-                <iframe class="preview-frame" id="previewFrame" sandbox="allow-scripts allow-modals"></iframe>
-            </div>
-        </main>
-    </div>
+/* ---------- Export ---------- */
+$("btnDl").onclick=()=>{
+  const url=URL.createObjectURL(new Blob([S.code],{type:"text/html"}));
+  const a=document.createElement("a");a.href=url;a.download="index.html";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+};
 
-    <!-- Repository Deployment Synchronization Dialog Overlay Window -->
-    <div class="overlay" id="gitOverlay">
-        <div class="dialog">
-            <div class="dialog-title">Configure Git Cloud Pipeline</div>
-            <div class="dialog-text">Sync compiled single-file structures directly into production targets securely. All configuration maps remain strictly isolated inside local local-storage variables.</div>
-            
-            <div class="form-group">
-                <label for="gitToken">Personal Authentication Token</label>
-                <input type="password" id="gitToken" placeholder="github_pat_...">
-            </div>
+/* ---------- Publish ---------- */
+function b64(str){const b=new TextEncoder().encode(str);let s="";for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}
+function showModal(){$("repo").value=S.repo;$("token").value=S.token;$("modal").classList.add("show");$("repo").focus()}
+$("btnSettings").onclick=()=>{publishAfter=false;showModal()};
+$("mCancel").onclick=()=>$("modal").classList.remove("show");
+let publishAfter=false;
+$("mSave").onclick=()=>{
+  const r=$("repo").value.trim().replace(/^https?:\/\/github\.com\//,"").replace(/\.git$/,"").replace(/^\/|\/$/g,""),t=$("token").value.trim();
+  if(!/^[\w.-]+\/[\w.-]+$/.test(r)||!t){toast("Enter the repository as owner/name and paste a token.");return}
+  S.repo=r;S.token=t;save();$("modal").classList.remove("show");
+  if(publishAfter)publish();
+};
+async function publish(){
+  if(!S.token||!S.repo){publishAfter=true;showModal();return}
+  if(S.code===DEFAULT_HTML){toast("Generate a page before publishing.");return}
+  $("btnPub").disabled=true;$("btnPub").textContent="Publishing...";
+  try{
+    const [owner,repo]=S.repo.split("/");
+    let done=null;
+    for(let i=0;i<5&&!done;i++){
+      const folder=String(1000+Math.floor(Math.random()*9000));
+      const res=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}/index.html`,{
+        method:"PUT",
+        headers:{Authorization:"Bearer "+S.token,Accept:"application/vnd.github+json","Content-Type":"application/json"},
+        body:JSON.stringify({message:"Publish site "+folder,content:b64(S.code)})
+      });
+      if(res.ok){done=folder;break}
+      if(res.status===422)continue; // folder already exists, try another number
+      const j=await res.json().catch(()=>({}));
+      if(res.status===401||res.status===403||res.status===404){S.token="";save()}
+      throw new Error((j.message||"GitHub error "+res.status)+(res.status===401?" (token rejected, enter a new one)":res.status===404?" (repository not found, or token lacks access)":""));
+    }
+    if(!done)throw new Error("Could not find a free folder number. Try again.");
+    const base=repo.toLowerCase()===(owner+".github.io").toLowerCase()?`https://${owner}.github.io/`:`https://${owner}.github.io/${repo}/`;
+    const url=base+done+"/";
+    toast(`Published. GitHub Pages can take a minute to go live:<br><a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>`,30000);
+    say("Published: "+url);
+  }catch(err){toast("Publish failed: "+esc(err.message),9000)}
+  $("btnPub").disabled=false;$("btnPub").textContent="Publish Live";
+}
+$("btnPub").onclick=()=>{publishAfter=false;publish()};
 
-            <div class="form-group">
-                <label for="gitRepo">Repository Project Address Mapping</label>
-                <input type="text" id="gitRepo" placeholder="username/project-repository">
-            </div>
+/* ---------- New project ---------- */
+$("btnClear").onclick=()=>{if(confirm("Clear the current project? Download it first if you want to keep it.")){S.code=DEFAULT_HTML;S.chat=[];$("log").innerHTML="";setCode(DEFAULT_HTML,true)}};
 
-            <div class="dialog-actions">
-                <button class="btn btn-secondary" id="cancelGitBtn" style="width: auto;">Dismiss</button>
-                <button class="btn btn-primary" id="saveGitBtn" style="width: auto;">Verify Pipeline</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="toast-bus" id="toastSystem">Alert notification system bus initialized.</div>
-
-    <!-- Encapsulated Execution Script Matrix Logic Core -->
-    <script id="workerScript" type="application/javascript">
-        self.onmessage = function(e) {
-            const { prompt } = e.data;
-            
-            // Comprehensive pre-compiled standard application template matrix configuration
-            const codeTemplateHead = `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>AI Generated Project Dashboard</title>\n    <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>\n    <style>\n        :root { --bg: #0b0f19; --card: #151f32; --border: #223452; --text: #f1f5f9; --accent: #38bdf8; }\n        body { background-color: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; padding: 2rem; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }\n        .app-frame { width: 100%; max-width: 700px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }\n        .badge { display: inline-flex; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); color: var(--accent); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }\n        h1 { font-size: 1.75rem; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: -0.02em; }\n        p { color: #94a3b8; line-height: 1.6; margin-bottom: 1.5rem; font-size: 0.95rem; }\n        .chart-box { background: rgba(11, 15, 25, 0.5); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; }\n        .action-control { display: block; width: 100%; background: var(--accent); color: #0b0f19; text-align: center; padding: 0.85rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; border: none; font-size: 0.95rem; transition: all 0.2s ease; }\n        .action-control:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3); }\n    </style>\n</head>\n<body>\n    <div class="app-frame">\n`;
-            
-            const codeTemplateBody = `        <div class="badge">Matrix Compiling Sandbox Engine App</div>\n        <h1>Intelligent Component Matrix Dashboard</h1>\n        <p>Your custom app specifications: "<strong>\${prompt}</strong>" were read, balanced, and compiled client-side directly within isolated thread frame bounds.</p>\n        <div class="chart-box"><canvas id="appExecutionChart"></canvas></div>\n        <button class="action-control" onclick="dispatchAction()">Trigger Core Engine Operations</button>\n`;
-            
-            const codeTemplateTail = `    </div>\n    <script>\n        function dispatchAction() {\n            alert("State changes committed across local context boundaries perfectly!");\n        }\n        const canvasCtx = document.getElementById('appExecutionChart').getContext('2d');\n        new Chart(canvasCtx, {\n            type: 'line',\n            data: {\n                labels: ['Interval A', 'Interval B', 'Interval C', 'Interval D', 'Interval E', 'Interval F'],\n                datasets: [{\n                    label: 'Client Thread Load Metrics',\n                    data: [23, 45, 38, 62, 51, 75],\n                    borderColor: '#38bdf8',\n                    backgroundColor: 'rgba(56, 189, 248, 0.05)',\n                    borderWidth: 2.5,\n                    tension: 0.38,\n                    pointBackgroundColor: '#38bdf8'\n                }]\n            },\n            options: { responsive: true, plugins: { legend: { labels: { color: '#f1f5f9', font: { size: 11 } } } }, scales: { y: { grid: { color: 'rgba(34, 52, 82, 0.4)' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: 'rgba(34, 52, 82, 0.4)' }, ticks: { color: '#94a3b8' } } } }\n        });\n    <\/script>\n</body>\n</html>`;
-
-            const unifiedPayload = codeTemplateHead + codeTemplateBody + codeTemplateTail;
-            let currentPayloadPointer = 0;
-            const operationalStepIncrement = Math.ceil(unifiedPayload.length / 50);
-
-            // Simulation core loop to stream down to primary browser execution thread context maps
-            function processStreamBlock() {
-                if (currentPayloadPointer < unifiedPayload.length) {
-                    currentPayloadPointer += operationalStepIncrement;
-                    if (currentPayloadPointer > unifiedPayload.length) {
-                        currentPayloadPointer = unifiedPayload.length;
-                    }
-                    const payloadFragment = unifiedPayload.substring(0, currentPayloadPointer);
-                    self.postMessage({ state: "processing", code: payloadFragment });
-                    setTimeout(processStreamBlock, 30);
-                } else {
-                    self.postMessage({ state: "finalized", code: unifiedPayload });
-                }
-            }
-            processStreamBlock();
-        };
-    </script>
-
-    <script type="application/javascript">
-        // DOM Nodes Mapping Configuration Setup References
-        const modelSelector = document.getElementById('modelSelector');
-        const warningBanner = document.getElementById('warningBanner');
-        const promptInput = document.getElementById('promptInput');
-        const generateBtn = document.getElementById('generateBtn');
-        const exportBtn = document.getElementById('exportBtn');
-        const publishBtn = document.getElementById('publishBtn');
-        const terminalView = document.getElementById('terminalView');
-        const previewFrame = document.getElementById('previewFrame');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const statusLabel = document.getElementById('statusLabel');
-        const progressBar = document.getElementById('progressBar');
-        const canvasPath = document.getElementById('canvasPath');
-
-        // Modal Elements Binding Map Group
-        const gitOverlay = document.getElementById('gitOverlay');
-        const cancelGitBtn = document.getElementById('cancelGitBtn');
-        const saveGitBtn = document.getElementById('saveGitBtn');
-        const gitToken = document.getElementById('gitToken');
-        const gitRepo = document.getElementById('gitRepo');
-        const toastSystem = document.getElementById('toastSystem');
-
-        let transientCodeCache = "";
-        let runningWorkerContext = null;
-
-        // Startup Bootstrapping Hook Pipeline Implementation
-        window.addEventListener('DOMContentLoaded', () => {
-            const cachedPrompt = localStorage.getItem('aura_builder_prompt') || "";
-            const cachedCode = localStorage.getItem('aura_builder_code') || "";
-            const cachedModel = localStorage.getItem('aura_builder_model') || "chromebook-core";
-
-            if (cachedPrompt) promptInput.value = cachedPrompt;
-            if (cachedModel) {
-                modelSelector.value = cachedModel;
-                evaluateModelWarnings();
-            }
-
-            if (cachedCode) {
-                transientCodeCache = cachedCode;
-                updateSandboxEngine(transientCodeCache);
-            } else {
-                transientCodeCache = `<!DOCTYPE html>\n<html>\n<head>\n<style>body{background:#0c0c0e;color:#444449;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:85vh;margin:0;font-size:0.85rem;letter-spacing:0.02em;}</style>\n</head>\n<body>\n<div>PROJECTION CANVAS IDLE WORKSPACE STANDBY STATE</div>\n</body>\n</html>`;
-                updateSandboxEngine(transientCodeCache);
-            }
-
-            gitToken.value = localStorage.getItem('aura_builder_git_token') || "";
-            gitRepo.value = localStorage.getItem('aura_builder_git_repo') || "";
-        });
-
-        modelSelector.addEventListener('change', evaluateModelWarnings);
-
-        function evaluateModelWarnings() {
-            const currentSelected = modelSelector.options[modelSelector.selectedIndex];
-            if (currentSelected.getAttribute('data-alert') === "true") {
-                warningBanner.style.display = 'block';
-            } else {
-                warningBanner.style.display = 'none';
-            }
-            localStorage.setItem('aura_builder_model', modelSelector.value);
-        }
-
-        function updateSandboxEngine(markupSourceCode) {
-            terminalView.textContent = markupSourceCode;
-            const codeBlob = new Blob([markupSourceCode], { type: 'text/html' });
-            previewFrame.src = URL.createObjectURL(codeBlob);
-        }
-
-        function triggerAlertNotice(notificationMessage, alertType = "info") {
-            toastSystem.className = `toast-bus \${alertType}`;
-            toastSystem.textContent = notificationMessage;
-            toastSystem.classList.add('visible');
-            setTimeout(() => {
-                toastSystem.classList.remove('visible');
-            }, 4000);
-        }
-
-        promptInput.addEventListener('input', () => {
-            localStorage.setItem('aura_builder_prompt', promptInput.value);
-        });
-
-        // Generation Trigger Mechanism Configuration Hook
-        generateBtn.addEventListener('click', () => {
-            const plainPromptText = promptInput.value.trim();
-            if (!plainPromptText) {
-                triggerAlertNotice("Enter project parameters or requirements first before executing code construction.", "error");
-                return;
-            }
-
-            generateBtn.disabled = true;
-            progressBar.style.display = "block";
-            statusLabel.textContent = "Compiling Application Matrix...";
-            statusIndicator.style.backgroundColor = "var(--warning)";
-            statusIndicator.style.boxShadow = "0 0 8px var(--warning)";
-
-            if (runningWorkerContext) {
-                runningWorkerContext.terminate();
-            }
-
-            const rawBlobCode = new Blob([document.getElementById('workerScript').textContent], { type: 'application/javascript' });
-            runningWorkerContext = new Worker(URL.createObjectURL(rawBlobCode));
-
-            runningWorkerContext.onmessage = function(msgEvent) {
-                const { state, code } = msgEvent.data;
-                transientCodeCache = code;
-                updateSandboxEngine(transientCodeCache);
-
-                if (state === "finalized") {
-                    localStorage.setItem('aura_builder_code', transientCodeCache);
-                    generateBtn.disabled = false;
-                    progressBar.style.display = "none";
-                    statusLabel.textContent = "Workspace Engine Standby";
-                    statusIndicator.style.backgroundColor = "var(--success)";
-                    statusIndicator.style.boxShadow = "0 0 8px var(--success)";
-                    triggerAlertNotice("AI Interface Matrix generation task finished.", "success");
-                    runningWorkerContext.terminate();
-                    runningWorkerContext = null;
-                }
-            };
-
-            runningWorkerContext.postMessage({
-                prompt: plainPromptText,
-                model: modelSelector.value
-            });
-        });
-
-        // Disk Output Action Processing Setup Block
-        exportBtn.addEventListener('click', () => {
-            if (!transientCodeCache) {
-                triggerAlertNotice("Canvas tracking state empty. Generate a structure component first.", "error");
-                return;
-            }
-            try {
-                const saveBlobFile = new Blob([transientCodeCache], { type: 'text/html;charset=utf-8;' });
-                const transientAnchor = document.createElement("a");
-                const fileDownloadUrl = URL.createObjectURL(saveBlobFile);
-                transientAnchor.setAttribute("href", fileDownloadUrl);
-                transientAnchor.setAttribute("download", `aura-app-\${Math.floor(1000 + Math.random() * 9000)}.html`);
-                transientAnchor.style.visibility = 'hidden';
-                document.body.appendChild(transientAnchor);
-                transientAnchor.click();
-                document.body.removeChild(transientAnchor);
-                triggerAlertNotice("Application layout exported to storage target successfully.", "success");
-            } catch (runtimeException) {
-                triggerAlertNotice("Export core failure: " + runtimeException.message, "error");
-            }
-        });
-
-        // Cloud Git Deployment Engine Control Paths
-        publishBtn.addEventListener('click', () => {
-            const localSavedToken = localStorage.getItem('aura_builder_git_token');
-            const localSavedRepo = localStorage.getItem('aura_builder_git_repo');
-
-            if (!localSavedToken || !localSavedRepo) {
-                gitOverlay.classList.add('visible');
-            } else {
-                initiateGitCloudTransaction(localSavedToken, localSavedRepo);
-            }
-        });
-
-        cancelGitBtn.addEventListener('click', () => {
-            gitOverlay.classList.remove('visible');
-        });
-
-        saveGitBtn.addEventListener('click', () => {
-            const rawTokenStr = gitToken.value.trim();
-            const rawRepoStr = gitRepo.value.trim();
-
-            if (!rawTokenStr || !rawRepoStr) {
-                triggerAlertNotice("Both configuration parameter arrays are critical to route API streams.", "error");
-                return;
-            }
-
-            localStorage.setItem('aura_builder_git_token', rawTokenStr);
-            localStorage.setItem('aura_builder_git_repo', rawRepoStr);
-            gitOverlay.classList.remove('visible');
-
-            initiateGitCloudTransaction(rawTokenStr, rawRepoStr);
-        });
-
-        function initiateGitCloudTransaction(tokenStr, repoStr) {
-            if (!transientCodeCache) {
-                triggerAlertNotice("Compilation engine cache buffer is empty. Nothing to dispatch.", "error");
-                return;
-            }
-
-            statusLabel.textContent = "Pushing Asset Bundle Core...";
-            statusIndicator.style.backgroundColor = "var(--accent)";
-            statusIndicator.style.boxShadow = "0 0 8px var(--accent)";
-            progressBar.style.display = "block";
-            publishBtn.disabled = true;
-
-            const randomSubfolderID = Math.floor(1000 + Math.random() * 9000).toString();
-            const endpointFileRoute = `\${randomSubfolderID}/index.html`;
-            
-            // Clean multi-byte compatible binary array string transformation
-            const safeBase64Payload = btoa(unescape(encodeURIComponent(transientCodeCache)));
-            
-            const destinationEndpoint = `https://api.github.com/repos/\${repoStr}/contents/\${endpointFileRoute}`;
-            const packetBody = JSON.stringify({
-                message: `Automated serverless component release pipeline. Project directory target ID: \${randomSubfolderID}`,
-                content: safeBase64Payload
-            });
-
-            fetch(destinationEndpoint, {
-                method: "PUT",
-                headers: {
-                    "Authorization": `Bearer \${tokenStr}`,
-                    "Content-Type": "application/json",
-                    "Accept": "application/vnd.github.v3+json"
-                },
-                body: packetBody
-            })
-            .then(async webResponse => {
-                if (!webResponse.ok) {
-                    const parsedErrorContext = await webResponse.json();
-                    throw new Error(parsedErrorContext.message || "Cloud interface request transaction faulted.");
-                }
-                return webResponse.json();
-            })
-            .then(() => {
-                const structuralSegments = repoStr.split('/');
-                const computedUsername = structuralSegments[0];
-                const computedRepo = structuralSegments[1];
-                const cleanPublicUrl = `https://\${computedUsername}.github.io/\${computedRepo}/\${randomSubfolderID}/index.html`;
-                
-                canvasPath.textContent = cleanPublicUrl;
-                canvasPath.style.color = "var(--success)";
-                
-                triggerAlertNotice(`Application pipeline synchronized live at: \${randomSubfolderID}!`, "success");
-            })
-            .catch(pipelineException) {
-                console.error(pipelineException);
-                triggerAlertNotice(`Cloud sync fault: \${pipelineException.message}`, "error");
-            }
-            .finally(() => {
-                publishBtn.disabled = false;
-                progressBar.style.display = "none";
-                statusLabel.textContent = "Workspace Engine Standby";
-                statusIndicator.style.backgroundColor = "var(--success)";
-                statusIndicator.style.boxShadow = "0 0 8px var(--success)";
-            });
-        }
-    </script>
-
-
-</body></html>
+/* ---------- Restore ---------- */
+$("model").value=S.model;if(!$("model").value)$("model").selectedIndex=0;
+$("prompt").value=S.prompt||"";
+updWarn();render(true);
+if(S.code!==DEFAULT_HTML)say("Restored your last project. Ask for changes or start a new one.");
+if(!navigator.gpu)say("WebGPU is not available in this browser, so the AI can't run here. You can still edit code in the Code tab, download it and publish it.","e");
+</script>
+</body>
+</html>

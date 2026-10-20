@@ -1,7 +1,10 @@
-<html lang="en" crxlauncher-bridged="" crxlauncher=""><head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Web Builder</title>
+<link rel="shortcut icon" href="https://static.vecteezy.com/system/resources/thumbnails/068/082/380/small/artificial-intelligence-design-png.png" sizes="152x152">
 <style>
 :root{--bg:#1f1e1c;--side:#262522;--panel:#2d2b28;--line:#3b3935;--text:#eeebe5;--mute:#a39e94;--acc:#d08a5e;--accd:#3a2c22;--warn:#f0c060;--err:#ff8a80;--r:14px}
 *{box-sizing:border-box}
@@ -67,21 +70,22 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .box input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px}
 #note{padding:0 14px 6px;font-size:12px;color:var(--mute)}
 .opt{text-align:left;padding:10px 12px;width:100%}.opt small{display:block;color:var(--mute);font-size:12px}
+#planL{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mute);white-space:nowrap;cursor:pointer}#planL.off{opacity:.4;cursor:not-allowed}
 .row{display:flex;gap:8px}.row>*{flex:1}
 @media(max-width:800px){body{flex-direction:column;overflow:auto}#chat{width:100%;max-width:none;height:85vh;border-right:0;border-bottom:1px solid var(--line)}#right{min-height:75vh}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-<style></style></head>
+</head>
 <body>
 <aside id="chat">
-  <div id="drawer" class="">
+  <div id="drawer">
     <div class="row"><button id="dNew" class="primary">+ New chat</button><button id="dClose">Close</button></div>
-    <div id="list"><div class="ci on"><span>New chat</span><button class="ghost" title="Delete chat">✕</button></div></div>
+    <div id="list"></div>
     <button id="btnSettings">GitHub settings</button>
   </div>
-  <div id="top"><button class="ghost" id="btnMenu" title="All chats">☰ Chats</button><div id="title">New chat</div><button class="ghost" id="btnNew" title="New chat">＋</button><button class="ghost" id="btnChat" title="Try Our Chat Bot" href="gridless.runs-on.dev/chatbot">Chat Bot</button></div>
+  <div id="top"><button class="ghost" id="btnMenu" title="All chats">☰ Chats</button><div id="title">New chat</div><button class="ghost" id="btnNew" title="New chat">＋</button><button class="ghost" id="btnChat" title="Chat about anything">Chat Bot</button></div>
   <div id="acts"><button id="btnDl">Download Code</button><button id="btnPub" class="primary">Publish Live</button></div>
-  <div id="log" aria-live="polite"><div id="hello"><h2>What shall we build?</h2>Describe a website and it appears on the right. Simple pages work on small models. Games and interactive apps need much bigger models.<div class="chips"><button>A landing page for a bike repair shop with prices and a contact form</button><button>A personal portfolio with a dark theme and project cards</button><button>A to-do list app that saves tasks in the browser</button></div></div></div>
+  <div id="log" aria-live="polite"></div>
   <div id="warn" role="alert">⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.</div>
   <div id="bar"><i></i></div>
   <div id="status"></div>
@@ -89,26 +93,27 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div id="comp">
     <textarea id="prompt" placeholder="Describe the site you want, or what to change…" aria-label="Prompt"></textarea>
     <div id="cbar">
+      <label id="planL" title="Writes a short plan first, then builds from it. Works best on 3B or larger models. Not available on the 360M model."><input type="checkbox" id="plan"> Plan</label>
       <select id="model" aria-label="Model" title="⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.">
         <option value="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC" data-heavy="0">Simple pages: Qwen2.5 Coder 1.5B (~1.1 GB)</option>
         <option value="SmolLM2-360M-Instruct-q4f16_1-MLC" data-heavy="0">Draft only: SmolLM2 360M (rough results)</option>
         <option value="Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 3B (~2.5 GB), for games and apps</option>
         <option value="Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 7B (~5 GB), best quality</option>
       </select>
-      <button id="btnStop" disabled="">Stop</button>
+      <button id="btnStop" disabled>Stop</button>
       <button id="send" class="primary" title="Send (Ctrl+Enter)" aria-label="Send">↑</button>
     </div>
   </div>
 </aside>
 <main id="right">
-  <div id="tabs"><button id="tPrev" class="on">Preview</button><button id="tCode">Code</button><div class="sp"><a id="live" target="_blank" rel="noopener" hidden=""></a><span id="saved">Saved locally</span></div></div>
-  <iframe id="frame" title="Live preview" sandbox="allow-scripts allow-forms allow-modals allow-popups" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;body{font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#f4f4f5;color:#444;text-align:center}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div&gt;&lt;h2&gt;Your page appears here&lt;/h2&gt;&lt;p&gt;Describe a site in the chat and press send.&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+  <div id="tabs"><button id="tPrev" class="on">Preview</button><button id="tCode">Code</button><div class="sp"><a id="live" target="_blank" rel="noopener" hidden></a><span id="saved"></span></div></div>
+  <iframe id="frame" title="Live preview" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
   <textarea id="code" spellcheck="false" aria-label="Generated code"></textarea>
 </main>
-<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mt" class="">
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
   <div class="box">
     <h2 id="mt">Connect GitHub to publish</h2>
-    <p>One-time setup, about 30 seconds. <a href="https://github.com/settings/tokens/new?scopes=repo&amp;description=AI%20Web%20Builder" target="_blank" rel="noopener" style="color:var(--acc)">Open GitHub's token page</a> (the repo permission is already ticked), choose a long expiry, press Generate token, and paste it below. It stays in this browser only and is sent only to api.github.com. After this, Publish Live adds a folder like <b>your-site/5347</b> to your repo automatically.</p>
+    <p>One-time setup, about 30 seconds. <a href="https://github.com/settings/tokens/new?scopes=repo&description=AI%20Web%20Builder" target="_blank" rel="noopener" style="color:var(--acc)">Open GitHub's token page</a> (the repo permission is already ticked), choose a long expiry, press Generate token, and paste it below. It stays in this browser only and is sent only to api.github.com. After this, Publish Live adds a folder like <b>your-site/5347</b> to your repo automatically.</p>
     <div><label for="repo">Repository (owner/name)</label><input id="repo" autocomplete="off"></div>
     <div><label for="token">GitHub token</label><input id="token" type="password" placeholder="github_pat_…" autocomplete="off"></div>
     <div class="row"><button id="mCancel">Cancel</button><button id="mSave" class="primary">Save</button></div>
@@ -131,7 +136,7 @@ import {CreateWebWorkerMLCEngine} from "https://cdn.jsdelivr.net/npm/@mlc-ai/web
 const $=id=>document.getElementById(id);
 const KEY="aiwb.v2",EMPTY='<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#f4f4f5;color:#444;text-align:center}</style></head><body><div><h2>Your page appears here</h2><p>Describe a site in the chat and press send.</p></div></body></html>';
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const mk=()=>({id:uid(),title:"New chat",code:EMPTY,msgs:[],folder:"",repo:"",url:""});
+const mk=()=>({id:uid(),title:"New chat",code:EMPTY,mode:"build",plan:null,msgs:[],folder:"",repo:"",url:""});
 let S={chats:[],cur:"",model:$("model").value,token:"",repo:"robovoid-bit/testsite"};
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){}
 try{const o=JSON.parse(localStorage.getItem("aiwb.v1")||"null");if(o&&!S.chats.length&&o.code&&o.code.length>300){const c=mk();c.title="Earlier project";c.code=o.code;S.chats.push(c);S.cur=c.id;S.token=S.token||o.token||"";S.repo=o.repo||S.repo}}catch(e){}
@@ -163,23 +168,25 @@ function bubble(m){
   if(m.url){d.append(m.t+" ");const a=document.createElement("a");a.href=m.url;a.target="_blank";a.rel="noopener";a.textContent=m.url;d.append(a,document.createElement("br"));
     const b=document.createElement("button");b.textContent="Copy link";b.onclick=()=>{navigator.clipboard.writeText(m.url).then(()=>b.textContent="Copied")};d.append(b)}
   else d.textContent=m.t;
+  if(m.plan)addPlanButtons(d,m);
   $("log").appendChild(d);$("log").scrollTop=1e9;return d;
 }
-function say(t,r,url){const m={r:r||"a",t,url};const c=cur();c.msgs.push(m);c.msgs=c.msgs.slice(-80);save();return bubble(m)}
+function say(t,r,url,isChat){const m={r:r||"a",t,url};if(isChat)m.c=1;const c=cur();c.msgs.push(m);c.msgs=c.msgs.slice(-80);save();return bubble(m)}
+const CCHIPS=["Explain how photosynthesis works in simple terms","What is the difference between RAM and storage?","Give me a 3-day study plan for learning basic Spanish"];
 const CHIPS=["A landing page for a bike repair shop with prices and a contact form","A personal portfolio with a dark theme and project cards","A to-do list app that saves tasks in the browser"];
 function showChat(){
   const c=cur();$("title").textContent=c.title;$("log").innerHTML="";
-  if(!c.msgs.length){const h=document.createElement("div");h.id="hello";h.innerHTML="<h2>What shall we build?</h2>Describe a website and it appears on the right. Simple pages work on small models. Games and interactive apps need much bigger models.";
-    const w=document.createElement("div");w.className="chips";CHIPS.forEach(t=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{$("prompt").value=t;$("prompt").focus()};w.append(b)});h.append(w);$("log").append(h)}
+  if(!c.msgs.length){const h=document.createElement("div");h.id="hello";const chat=c.mode==="chat";h.innerHTML=chat?"<h2>Ask me anything</h2>A general-knowledge chat bot running on your device. It has no internet, so it can be wrong or out of date.":"<h2>What shall we build?</h2>Describe a website and it appears on the right. Simple pages work on small models. Games and interactive apps need much bigger models.";
+    const w=document.createElement("div");w.className="chips";(chat?CCHIPS:CHIPS).forEach(t=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{$("prompt").value=t;$("prompt").focus()};w.append(b)});h.append(w);$("log").append(h)}
   else c.msgs.forEach(bubble);
-  last="";render(true);if($("code").style.display==="block")$("code").value=c.code;liveChip();
+  last="";render(true);if($("code").style.display==="block")$("code").value=c.code;liveChip();applyMode();
 }
 function liveChip(){const c=cur(),a=$("live");a.hidden=!c.url;if(c.url){a.href=c.url;a.textContent="Live: "+c.url.replace("https://","")}}
 function list(){
   const L=$("list");L.innerHTML="";
   S.chats.slice().reverse().forEach(c=>{
     const d=document.createElement("div");d.className="ci"+(c.id===S.cur?" on":"");
-    const s=document.createElement("span");s.textContent=c.title;d.append(s);
+    const s=document.createElement("span");s.textContent=(c.mode==="chat"?"💬 ":"")+c.title;d.append(s);
     if(c.url){const l=document.createElement("small");l.textContent="live";d.append(l)}
     const x=document.createElement("button");x.className="ghost";x.textContent="✕";x.title="Delete chat";x.onclick=e=>{e.stopPropagation();if(busy)return toast("Wait for the current build to finish.");if(confirm("Delete this chat and its code? A published site stays online.")){S.chats=S.chats.filter(k=>k!==c);if(!S.chats.length)S.chats.push(mk());if(S.cur===c.id)S.cur=S.chats[S.chats.length-1].id;save();list();showChat()}};
     d.append(x);d.onclick=()=>{if(busy)return toast("Wait for the current build to finish.");S.cur=c.id;save();$("drawer").classList.remove("show");showChat()};
@@ -188,6 +195,12 @@ function list(){
 function newChat(){if(busy)return toast("Wait for the current build to finish.");const c=mk();S.chats.push(c);S.cur=c.id;save();$("drawer").classList.remove("show");showChat();$("prompt").focus()}
 $("btnMenu").onclick=()=>{list();$("drawer").classList.add("show")};
 $("dClose").onclick=()=>$("drawer").classList.remove("show");
+$("btnChat").onclick=()=>{
+  if(busy)return toast("Wait for the current response to finish.");
+  const c=cur(),m2=c.mode==="chat"?"build":"chat";
+  if(!c.msgs.length){c.mode=m2;save();showChat();return}
+  const n=mk();n.mode=m2;S.chats.push(n);S.cur=n.id;save();showChat();$("prompt").focus();
+};
 $("btnNew").onclick=newChat;$("dNew").onclick=newChat;
 
 /* ----- model + worker ----- */
@@ -203,41 +216,97 @@ async function ensureEngine(){
   loaded=id;$("bar").style.display="none";$("status").textContent="Model ready";return engine;
 }
 const SYS="You are a senior web designer and front-end developer. Write ONE complete, working, self-contained HTML5 page. Rules: put all CSS in a <style> tag and any JavaScript in a <script> tag; no external files, fonts, images or CDN links (use CSS gradients, emoji or inline SVG for visuals); mobile-friendly layout with flexbox or grid; a clear colour palette, good spacing and readable type; real, specific copy instead of lorem ipsum; include a header or nav, a hero, two or three content sections and a footer unless the request says otherwise; make buttons and forms actually work. If existing code is given, return the full updated page with the requested change. Reply with only a ```html code block that starts with <!DOCTYPE html>. No explanations.";
+const NOTE_B="Small models are fine for simple pages. Games, apps and anything with moving parts or logic need much bigger models (3B or larger), and may still take a few tries.";
+const NOTE_C="Chat mode runs on a small local model with no internet, so it can be wrong or out of date. Double-check anything important.";
+const CHAT_SYS="You are a friendly, knowledgeable assistant for general questions. Answer clearly and concisely in plain text, using short paragraphs or simple lists. If you are not sure, say so instead of guessing. You have no internet access and your knowledge has a cutoff date, so you may not know recent events.";
+const PLAN_SYS="You are a web design planner. Given a website or web app request, write a short build plan as a plain list under these headings: Purpose (one line), Style (colours, fonts, mood), Layout (each section in order), Features (each interactive feature with the exact behaviour, step by step: how it starts, what happens on every click or key press, how it ends and resets), Notes. Keep it under 250 words. Do not write any code.";
+function applyMode(){
+  const c=cur(),chat=c.mode==="chat",small=/SmolLM2/.test($("model").value);
+  $("btnChat").textContent=chat?"Builder":"Chat Bot";$("btnChat").title=chat?"Start a new website chat":"Chat about anything";
+  $("note").textContent=chat?NOTE_C:NOTE_B;
+  $("prompt").placeholder=chat?"Ask anything…":c.plan?"Tell me what to change in the plan…":"Describe the site you want, or what to change…";
+  const off=chat||small;$("plan").disabled=off;$("plan").checked=!off&&!!S.plan;$("planL").classList.toggle("off",off);
+  $("planL").title=chat?"Planning is for building websites.":small?"Planning needs the 1.5B model or larger.":"Writes a short plan first, then builds from it. Works best on 3B or larger models.";
+}
+function begin(){busy=true;stopped=false;$("send").disabled=true;$("btnStop").disabled=false}
+function end(){busy=false;$("send").disabled=false;$("btnStop").disabled=true;applyMode()}
+function fail(err){say("Error: "+(err&&err.message||err),"e");$("status").textContent="Failed";$("bar").style.display="none";if(/memory|OOM|device lost|allocation/i.test(String(err&&err.message)))say("The model ran out of memory. Pick a lighter model.","e")}
+function intro(p){const ch=cur();if($("hello"))$("hello").remove();if(ch.title==="New chat"){ch.title=p.slice(0,34);$("title").textContent=ch.title}}
+async function llm(messages,o,onText){
+  const e=await ensureEngine();
+  const st=await e.chat.completions.create({messages,stream:true,top_p:0.9,...o});
+  let acc="",n=0;for await(const c of st){acc+=c.choices[0]?.delta?.content||"";if(++n%4===0)onText(acc)}
+  onText(acc);return acc;
+}
+function addPlanButtons(d,m){
+  const c=cur();if(!c.plan||c.msgs.filter(x=>x.plan).pop()!==m)return;
+  const r=document.createElement("div");r.className="row";r.style.marginTop="8px";
+  const b=document.createElement("button");b.className="primary";b.textContent="Build from this plan";b.onclick=()=>{if(!busy&&c.plan)build(c.plan.req,c.plan.text,true)};
+  const v=document.createElement("button");v.textContent="Revise plan";v.onclick=()=>{$("prompt").placeholder="Tell me what to change in the plan…";$("prompt").focus()};
+  r.append(b,v);d.append(r);
+}
 async function generate(){
   const p=$("prompt").value.trim();if(!p||busy)return;
-  busy=true;stopped=false;$("send").disabled=true;$("btnStop").disabled=false;
+  if(cur().mode==="chat")return chatSend(p);
+  if($("plan").checked&&!$("plan").disabled)return planSend(p);
+  return build(p,"",false);
+}
+async function chatSend(p){
+  begin();const ch=cur();intro(p);say(p,"u",undefined,1);$("prompt").value="";
+  try{
+    const keep=[];let tot=0;
+    for(let i=ch.msgs.length-1;i>=0&&keep.length<8;i--){const m=ch.msgs[i];if(!m.c)continue;tot+=Math.min(m.t.length,1500);if(tot>4500&&keep.length)break;keep.unshift({role:m.r==="u"?"user":"assistant",content:m.t.slice(0,1500)})}
+    say("…","a",undefined,1);const live=$("log").lastChild,mo=ch.msgs[ch.msgs.length-1];
+    $("status").textContent="Thinking…";
+    const t=(await llm([{role:"system",content:CHAT_SYS},...keep],{temperature:0.6,repetition_penalty:1.05,max_tokens:700},x=>{live.textContent=x||"…";$("log").scrollTop=1e9})).trim();
+    mo.t=t||"I didn't get an answer. Try rephrasing, or pick a larger model.";live.textContent=mo.t;save();$("status").textContent="Ready";
+  }catch(err){fail(err)}
+  end();
+}
+async function planSend(p){
+  begin();const ch=cur();intro(p);say(p,"u");$("prompt").value="";
+  try{
+    const req=ch.plan?ch.plan.req:p;
+    const u=ch.plan?"Website request: "+req+"\n\nCurrent plan:\n"+ch.plan.text.slice(0,1800)+"\n\nRevise the plan using this feedback: "+p:"Website request: "+p;
+    say("Planning…");const live=$("log").lastChild,mo=ch.msgs[ch.msgs.length-1];
+    $("status").textContent="Planning…";
+    const t=(await llm([{role:"system",content:PLAN_SYS},{role:"user",content:u}],{temperature:0.4,repetition_penalty:1.05,max_tokens:450},x=>{live.textContent="Planning…\n\n"+x;$("log").scrollTop=1e9})).trim();
+    if(t.length<40){mo.r="e";mo.t="The model couldn't write a plan. Turn off Plan, or pick a larger model.";live.className="m e";live.textContent=mo.t}
+    else{ch.plan={req,text:t};mo.t="Here's the plan:\n\n"+t;mo.plan=1;live.textContent=mo.t;addPlanButtons(live,mo)}
+    save();$("status").textContent="Ready";
+  }catch(err){fail(err)}
+  end();
+}
+async function build(p,plan,fromBtn){
+  if(busy)return;begin();
   const ch=cur(),backup=ch.code;
-  if($("hello"))$("hello").remove();
-  if(ch.title==="New chat"){ch.title=p.slice(0,34);$("title").textContent=ch.title}
-  say(p,"u");$("prompt").value="";
+  intro(p);if(!fromBtn){say(p,"u");$("prompt").value=""}
+  ch.plan=null;
   try{
     const e=await ensureEngine();
     if(/\b(game|snake|tetris|pong|chess|calculator|quiz|todo|to-do|app|dashboard|timer|tracker)\b/i.test(p)&&$("model").selectedOptions[0].dataset.heavy!=="1")say("Heads up: games and apps need much bigger models than this one. I'll try, but the result may not work. The 3B model or larger is far more reliable.");
-    const edit=ch.code!==EMPTY&&ch.code.length<=3500;
+    const edit=!plan&&ch.code!==EMPTY&&ch.code.length<=3500;
     const out=say("Building…");const live=$("log").lastChild;
-    if(ch.code!==EMPTY&&!edit)live.textContent="This page is too large to edit with the model's memory, so I'm building a new one. Building…";
+    if(!plan&&ch.code!==EMPTY&&!edit)live.textContent="This page is too large to edit with the model's memory, so I'm building a new one. Building…";
     $("status").textContent="Generating…";
-    const user=edit?"Current page:\n```html\n"+ch.code+"\n```\n\nChange to make: "+p:"Build this website: "+p;
-    const stream=await e.chat.completions.create({messages:[{role:"system",content:SYS},{role:"user",content:user}],stream:true,temperature:0.3,top_p:0.9,repetition_penalty:1.05,max_tokens:edit?2400:3500,stop:["</html>"]});
-    let acc="",n=0,stuck=false;
+    const user=edit?"Current page:\n```html\n"+ch.code+"\n```\n\nChange to make: "+p:"Build this website: "+p+(plan?"\n\nFollow this plan exactly:\n"+plan.slice(0,1800):"");
+    const stream=await e.chat.completions.create({messages:[{role:"system",content:SYS},{role:"user",content:user}],stream:true,temperature:0.3,top_p:0.9,repetition_penalty:1.05,max_tokens:edit?2400:plan?3000:3500,stop:["</html>"]});
+    let acc="",n=0;
     for await(const c of stream){
       acc+=c.choices[0]?.delta?.content||"";
       if(++n%6===0){const h=extractHtml(acc);if(h.length>40){ch.code=finalize(h);render();live.textContent="Building… "+acc.length+" characters"}}
     }
-    if(stuck){const t=acc.slice(-80),i=acc.indexOf(t);if(i>=0)acc=acc.slice(0,i+t.length)}
     const h=extractHtml(acc);let msg;
-    if(h.length>200){setCode(finalize(h),true);msg={r:"a",t:stuck?"The model started repeating itself, so I stopped it and kept everything built up to that point. You can tweak the page in the Code tab or ask for changes.":stopped?"Stopped. I kept everything built so far.":"Done. Ask for changes, or press Publish Live to put it online."}}
+    if(h.length>200){setCode(finalize(h),true);msg={r:"a",t:stopped?"Stopped. I kept everything built so far.":"Done. Ask for changes, or press Publish Live to put it online."}}
     else{ch.code=backup;render(true);msg={r:"e",t:"The model stopped before it produced a usable page, so I kept your previous one. Try a more specific prompt or the Qwen 1.5B model."}}
     ch.msgs[ch.msgs.length-1]=msg;live.className="m "+msg.r;live.textContent=msg.t;save();$("status").textContent="Ready";
-  }catch(err){
-    ch.code=backup;render(true);say("Error: "+(err&&err.message||err),"e");$("status").textContent="Failed";$("bar").style.display="none";
-    if(/memory|OOM|device lost|allocation/i.test(String(err.message)))say("The model ran out of memory. Pick a lighter model.","e");
-  }
-  busy=false;$("send").disabled=false;$("btnStop").disabled=true;
+  }catch(err){ch.code=backup;render(true);fail(err)}
+  end();
 }
 $("send").onclick=generate;$("btnStop").onclick=()=>{stopped=true;engine&&engine.interruptGenerate()};
 $("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey||!e.shiftKey)){e.preventDefault();generate()}});
-$("model").addEventListener("change",()=>{S.model=$("model").value;updWarn();save()});
+$("model").addEventListener("change",()=>{S.model=$("model").value;updWarn();applyMode();save()});
+$("plan").addEventListener("change",()=>{S.plan=$("plan").checked;save()});
 
 /* ----- tabs / export ----- */
 function tab(code){$("frame").style.display=code?"none":"block";$("code").style.display=code?"block":"none";$("tPrev").classList.toggle("on",!code);$("tCode").classList.toggle("on",code);if(code)$("code").value=cur().code;else render(true)}
@@ -308,10 +377,9 @@ $("pShare").onclick=()=>{$("btnDl").click();toast("Saved as index.html. Drag it 
 $("pGit").onclick=()=>{pm.style.display="none";after=false;publish()};
 
 /* ----- start ----- */
-$("model").value=S.model;if(!$("model").value)$("model").selectedIndex=0;
+$("plan").checked=!!S.plan;$("model").value=S.model;if(!$("model").value)$("model").selectedIndex=0;
 updWarn();showChat();
 if(!navigator.gpu)say("WebGPU is not available in this browser, so the AI can't run here. You can still edit code in the Code tab, download it and publish it.","e");
 </script>
-
-
-</body></html>
+</body>
+</html>

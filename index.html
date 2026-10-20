@@ -2,384 +2,252 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Web Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gridless</title>
 <link rel="shortcut icon" href="https://static.vecteezy.com/system/resources/thumbnails/068/082/380/small/artificial-intelligence-design-png.png" sizes="152x152">
 <style>
-:root{--bg:#1f1e1c;--side:#262522;--panel:#2d2b28;--line:#3b3935;--text:#eeebe5;--mute:#a39e94;--acc:#d08a5e;--accd:#3a2c22;--warn:#f0c060;--err:#ff8a80;--r:14px}
+:root{--acc:#3b82f6;--top:32px;--dock:84px;--w:rgba(255,255,255,.76);--panel:#fff;--bg:#f4f5f8;--line:rgba(0,0,0,.1);--text:#1c1f26;--mute:#6b7280}
+body.dark{--w:rgba(30,30,36,.78);--panel:#2a2a31;--bg:#1d1d22;--line:rgba(255,255,255,.13);--text:#f2f2f5;--mute:#a0a6b2}
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--text);font:14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;overflow:hidden}
-button,select,textarea,input{font:inherit;color:inherit}
-button{cursor:pointer;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:7px 12px;transition:border-color .15s,background .15s}
-button:hover:not(:disabled){border-color:var(--acc)}
-button:disabled{opacity:.45;cursor:not-allowed}
+html,body{height:100%;margin:0;overflow:hidden}
+body{color:var(--text);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;user-select:none;-webkit-user-select:none}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:6px 12px}
+button:hover{border-color:var(--acc)}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.primary{background:var(--acc);border-color:var(--acc);color:#1d130c;font-weight:600}
-.ghost{background:none;border-color:transparent;color:var(--mute)}
-.ghost:hover:not(:disabled){color:var(--text);background:var(--panel)}
-#chat{width:420px;min-width:320px;max-width:46%;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;position:relative}
-#top{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
-#title{flex:1;font:600 17px Georgia,"Times New Roman",serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#acts{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
-#acts button{flex:1}
-#log{flex:1;overflow:auto;padding:16px 14px;display:flex;flex-direction:column;gap:12px}
-.m{max-width:92%;padding:9px 13px;border-radius:var(--r);word-wrap:break-word;white-space:pre-wrap}
-.m.u{align-self:flex-end;background:var(--accd);border:1px solid #54402f}
-.m.a{align-self:flex-start;background:var(--panel);border:1px solid var(--line)}
-.m.e{align-self:flex-start;background:#3a2422;border:1px solid #6b3a36;color:var(--err)}
-.m a{color:var(--acc);word-break:break-all}
-.m button{margin-top:6px;padding:3px 10px;font-size:12px}
-#hello{margin:auto;text-align:center;color:var(--mute);max-width:300px}
-#hello h2{font:600 24px Georgia,serif;color:var(--text);margin:0 0 6px}
-.chips{display:flex;flex-direction:column;gap:8px;margin-top:16px}
-.chips button{text-align:left;background:none;color:var(--text);font-size:13px}
-#warn{display:none;margin:0 12px 8px;background:#3a3016;border:1px solid var(--warn);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:12px}
-#warn.show{display:block}
-#bar{display:none;height:4px;margin:0 12px 6px;background:var(--bg);border-radius:4px;overflow:hidden}
-#bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
-#status{padding:0 14px 6px;font-size:12px;color:var(--mute);min-height:20px}
-#comp{margin:0 12px 12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px 10px 8px}
-#comp:focus-within{border-color:var(--acc)}
-#prompt{width:100%;background:none;border:0;resize:none;outline:0;min-height:52px;max-height:160px;padding:2px 4px}
-#cbar{display:flex;gap:8px;align-items:center}
-#model{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
-#send{border-radius:50%;width:36px;height:36px;padding:0;font-size:17px}
-#drawer{position:absolute;inset:0;background:var(--side);z-index:5;display:none;flex-direction:column;padding:12px;gap:8px}
-#drawer.show{display:flex}
-#list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:4px}
-.ci{display:flex;align-items:center;gap:4px;border-radius:10px;padding:2px 4px 2px 10px;cursor:pointer}
-.ci:hover,.ci.on{background:var(--panel)}
-.ci.on{border:1px solid var(--line)}
-.ci span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 0}
-.ci small{color:var(--acc)}
-#right{flex:1;display:flex;flex-direction:column;min-width:0}
-#tabs{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--side);align-items:center}
-#tabs .on{background:var(--accd);border-color:var(--acc)}
-#tabs .sp{margin-left:auto;display:flex;gap:12px;align-items:center;font-size:12px;color:var(--mute);min-width:0}
-#live{color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#frame{flex:1;border:0;background:#fff;width:100%}
-#code{flex:1;display:none;resize:none;border:0;border-radius:0;background:var(--bg);padding:12px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre;outline:0}
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--acc);padding:10px 16px;border-radius:12px;display:none;max-width:90%;z-index:20}
-#toast a{color:var(--acc)}
-#modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
-#modal.show{display:flex}
-.box{background:var(--side);border:1px solid var(--line);border-radius:16px;padding:22px;width:100%;max-width:450px;display:flex;flex-direction:column;gap:10px}
-.box h2{margin:0;font:600 20px Georgia,serif}.box p{margin:0;color:var(--mute);font-size:13px}
-.box label{font-size:12px;color:var(--mute);display:block;margin-bottom:3px}
-.box input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px}
-#note{padding:0 14px 6px;font-size:12px;color:var(--mute)}
-.opt{text-align:left;padding:10px 12px;width:100%}.opt small{display:block;color:var(--mute);font-size:12px}
-#planL{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mute);white-space:nowrap;cursor:pointer}#planL.off{opacity:.4;cursor:not-allowed}
-.row{display:flex;gap:8px}.row>*{flex:1}
-@media(max-width:800px){body{flex-direction:column;overflow:auto}#chat{width:100%;max-width:none;height:85vh;border-right:0;border-bottom:1px solid var(--line)}#right{min-height:75vh}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+input{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0;user-select:text;-webkit-user-select:text}
+.drag iframe{pointer-events:none}
+.tile{display:grid;place-items:center;width:52px;height:52px;border-radius:14px;font-size:26px;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 8px rgba(0,0,0,.28);flex:none}
+.tile.sm{width:20px;height:20px;border-radius:6px;font-size:12px;box-shadow:none}
+/* top toolbar */
+#top{position:fixed;top:0;left:0;right:0;height:var(--top);background:var(--w);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 10px;z-index:9997;font-size:13px}
+#top b{font-weight:700;letter-spacing:.04em;flex:1}
+#top button{background:none;border-color:transparent;padding:2px 8px;border-radius:8px;height:24px}
+#top button:hover{background:rgba(127,127,127,.2)}
+#clock{padding:0 6px;white-space:nowrap}
+/* desktop icons (right side) */
+#desk{position:fixed;top:calc(var(--top) + 12px);right:12px;bottom:var(--dock);direction:rtl;display:grid;grid-auto-flow:column;grid-template-rows:repeat(auto-fill,102px);grid-auto-columns:96px;align-content:start;gap:2px}
+.ico{direction:ltr;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:1px solid transparent;border-radius:12px;padding:6px 2px;height:100px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.ico b{font-weight:500;font-size:12px;text-align:center;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ico:hover,.ico.sel{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35)}
+/* windows */
+@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.win{position:fixed;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.22);overflow:hidden;min-width:300px;min-height:200px;animation:pop .16s ease-out}
+.win.active{box-shadow:0 18px 60px rgba(0,0,0,.4)}
+.win.max{left:0!important;top:var(--top)!important;width:100%!important;height:calc(100% - var(--top) - var(--dock))!important;border-radius:0;border-left:0;border-right:0}
+.tb{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--w);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);cursor:grab;touch-action:none}
+.tb .t{flex:1;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctl{display:flex;gap:7px}
+.ctl button{width:14px;height:14px;padding:0;border-radius:50%;border:0;font-size:9px;line-height:14px;color:transparent}
+.ctl:hover button{color:rgba(0,0,0,.6)}
+.ctl .m{background:#febc2e}.ctl .z{background:#28c840}.ctl .x{background:#ff5f57}
+.wbody{flex:1;position:relative;min-height:0;display:flex;flex-direction:column;user-select:text;-webkit-user-select:text}
+.wbody iframe{flex:1;border:0;width:100%;background:var(--bg)}
+.win:not(.active) .wbody::after{content:"";position:absolute;inset:0;z-index:2}
+.rs{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;z-index:3;touch-action:none}
+.win.max .rs{display:none}
+.pad{padding:18px;overflow:auto;gap:8px;background:var(--panel)}
+.pad h3{margin:16px 0 4px;font-size:15px}.pad h3:first-child{margin-top:0}
+.f{display:flex;gap:8px;flex-wrap:wrap}.f input{flex:1;min-width:90px}
+.hint{color:var(--mute);font-size:12px;margin:4px 0}
+.sw{display:flex;gap:8px;flex-wrap:wrap}.sw button{width:60px;height:38px;padding:0;border-radius:10px}
+.ci{display:flex;align-items:center;gap:8px;padding:4px 0}.ci span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notes{flex:1;resize:none;border:0;background:var(--panel);padding:16px;outline:0;line-height:1.65}
+.tool{display:flex;gap:6px;padding:8px;border-bottom:1px solid var(--line);background:var(--bg)}.tool input{flex:1;background:var(--panel)}
+/* dock */
+#dock{position:fixed;bottom:max(10px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);max-width:calc(100% - 16px);display:flex;align-items:flex-end;gap:8px;padding:8px 10px 10px;background:var(--w);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:24px;box-shadow:0 10px 40px rgba(0,0,0,.25);z-index:9999}
+.dk{position:relative;padding:0;border:0;background:none;border-radius:14px;transition:transform .14s}
+.dk:hover{transform:translateY(-7px) scale(1.14)}
+.dk::before{content:attr(data-n);position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%);background:rgba(20,20,24,.9);color:#fff;font-size:12px;padding:3px 9px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s}
+.dk:hover::before{opacity:1}
+.dk::after{content:"";position:absolute;bottom:-7px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--text);opacity:0}
+.dk.run::after{opacity:.7}.dk.on::after{opacity:1;background:var(--acc)}
+.sep{width:1px;align-self:stretch;background:var(--line);margin:4px 2px}
+/* launcher + context menu */
+#launch{position:fixed;left:50%;bottom:calc(var(--dock) + 8px);transform:translateX(-50%);width:min(540px,calc(100% - 16px));max-height:62%;background:var(--w);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--line);border-radius:22px;padding:14px;z-index:9998;display:flex;flex-direction:column;gap:12px;box-shadow:0 18px 60px rgba(0,0,0,.35)}
+#launch[hidden],#ctx[hidden]{display:none}
+#lgrid{overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+#lgrid button{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border-color:transparent;padding:10px 4px;font-size:12px;text-align:center}
+#lgrid button:hover{background:rgba(127,127,127,.18)}
+#ctx{position:fixed;z-index:10000;min-width:180px;background:var(--w);backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:12px;padding:5px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+#ctx button{display:block;width:100%;text-align:left;background:none;border-color:transparent;border-radius:8px}
+#ctx button:hover{background:var(--acc);color:#fff}
+@media(max-width:700px){:root{--dock:74px}.tile{width:44px;height:44px;font-size:22px}#dock{gap:6px;overflow-x:auto}.dk:hover{transform:none}.dk::before{display:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-<aside id="chat">
-  <div id="drawer">
-    <div class="row"><button id="dNew" class="primary">+ New chat</button><button id="dClose">Close</button></div>
-    <div id="list"></div>
-    <button id="btnSettings">GitHub settings</button>
-  </div>
-  <div id="top"><button class="ghost" id="btnMenu" title="All chats">☰ Chats</button><div id="title">New chat</div><button class="ghost" id="btnNew" title="New chat">＋</button><button class="ghost" id="btnChat" title="Chat about anything">Chat Bot</button></div>
-  <div id="acts"><button id="btnDl">Download Code</button><button id="btnPub" class="primary">Publish Live</button></div>
-  <div id="log" aria-live="polite"></div>
-  <div id="warn" role="alert">⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.</div>
-  <div id="bar"><i></i></div>
-  <div id="status"></div>
-  <div id="note">Small models are fine for simple pages. Games, apps and anything with moving parts or logic need much bigger models (3B or larger), and may still take a few tries.</div>
-  <div id="comp">
-    <textarea id="prompt" placeholder="Describe the site you want, or what to change…" aria-label="Prompt"></textarea>
-    <div id="cbar">
-      <label id="planL" title="Writes a short plan first, then builds from it. Works best on 3B or larger models. Not available on the 360M model."><input type="checkbox" id="plan"> Plan</label>
-      <select id="model" aria-label="Model" title="⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.">
-        <option value="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC" data-heavy="0">Simple pages: Qwen2.5 Coder 1.5B (~1.1 GB)</option>
-        <option value="SmolLM2-360M-Instruct-q4f16_1-MLC" data-heavy="0">Draft only: SmolLM2 360M (rough results)</option>
-        <option value="Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 3B (~2.5 GB), for games and apps</option>
-        <option value="Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 7B (~5 GB), best quality</option>
-      </select>
-      <button id="btnStop" disabled>Stop</button>
-      <button id="send" class="primary" title="Send (Ctrl+Enter)" aria-label="Send">↑</button>
-    </div>
-  </div>
-</aside>
-<main id="right">
-  <div id="tabs"><button id="tPrev" class="on">Preview</button><button id="tCode">Code</button><div class="sp"><a id="live" target="_blank" rel="noopener" hidden></a><span id="saved"></span></div></div>
-  <iframe id="frame" title="Live preview" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
-  <textarea id="code" spellcheck="false" aria-label="Generated code"></textarea>
-</main>
-<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
-  <div class="box">
-    <h2 id="mt">Connect GitHub to publish</h2>
-    <p>One-time setup, about 30 seconds. <a href="https://github.com/settings/tokens/new?scopes=repo&description=AI%20Web%20Builder" target="_blank" rel="noopener" style="color:var(--acc)">Open GitHub's token page</a> (the repo permission is already ticked), choose a long expiry, press Generate token, and paste it below. It stays in this browser only and is sent only to api.github.com. After this, Publish Live adds a folder like <b>your-site/5347</b> to your repo automatically.</p>
-    <div><label for="repo">Repository (owner/name)</label><input id="repo" autocomplete="off"></div>
-    <div><label for="token">GitHub token</label><input id="token" type="password" placeholder="github_pat_…" autocomplete="off"></div>
-    <div class="row"><button id="mCancel">Cancel</button><button id="mSave" class="primary">Save</button></div>
-  </div>
-</div>
-<div id="pubmodal" class="modalwrap" role="dialog" aria-modal="true" aria-labelledby="pt" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:10;padding:16px">
-  <div class="box">
-    <h2 id="pt">Publish this page</h2>
-    <p>Pick a free way to get a link. The first two need no account.</p>
-    <button class="opt primary" id="pHtmlPub">Paste into HTML Pub<small>Copies your code and opens the site. Paste, press Publish, get a link (5 free pages).</small></button>
-    <button class="opt" id="pShare">Drop the file on sharable.link<small>Downloads index.html and opens the site. Drag the file onto the page.</small></button>
-    <button class="opt" id="pGit">Publish to my GitHub repo<small>Permanent link on your own site. Needs a one-time token.</small></button>
-    <button id="pClose">Cancel</button>
-  </div>
-</div>
-<div id="toast" role="status"></div>
+<div id="top"><b>◆ GRIDLESS</b><span id="clock"></span><button id="bFs" title="Fullscreen" aria-label="Fullscreen">⛶</button><button id="bTheme" title="Light or dark mode" aria-label="Toggle dark mode">◐</button></div>
+<div id="desk" aria-label="Desktop"></div>
+<div id="launch" hidden><input id="q" placeholder="Search apps…" aria-label="Search apps"><div id="lgrid"></div></div>
+<div id="dock" aria-label="Dock"></div>
+<div id="ctx" hidden></div>
 
-<script type="module">
-import {CreateWebWorkerMLCEngine} from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm";
+<script>
+/* ============================================================
+   APP LIST. Add or edit your apps here.
+   - url:     a page in this repo (e.g. "builder.html") or any web address
+   - builtin: one of the built-in apps defined further down
+   - w, h:    starting window size      - hue: icon colour (0 to 360)
+   You can also add apps without editing code in Settings.
+   ============================================================ */
+const APPS=[
+  {id:"builder", name:"AI Web Builder", icon:"🛠️", hue:215, url:"builder.html", w:1060, h:660},
+  {id:"chat",    name:"Chat Bot",       icon:"💬", hue:150, url:"builder.html?mode=chat", w:480, h:640},
+  {id:"browser", name:"Browser",        icon:"🌐", hue:190, builtin:"browser", w:900, h:600},
+  {id:"notes",   name:"Notes",          icon:"📝", hue:42,  builtin:"notes", w:440, h:460},
+  {id:"settings",name:"Settings",       icon:"⚙️", hue:265, builtin:"settings", w:560, h:600},
+];
+/* ============================================================ */
+
 const $=id=>document.getElementById(id);
-const KEY="aiwb.v2",EMPTY='<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#f4f4f5;color:#444;text-align:center}</style></head><body><div><h2>Your page appears here</h2><p>Describe a site in the chat and press send.</p></div></body></html>';
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const mk=()=>({id:uid(),title:"New chat",code:EMPTY,mode:"build",plan:null,msgs:[],folder:"",repo:"",url:""});
-let S={chats:[],cur:"",model:$("model").value,token:"",repo:"robovoid-bit/testsite"};
-try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){}
-try{const o=JSON.parse(localStorage.getItem("aiwb.v1")||"null");if(o&&!S.chats.length&&o.code&&o.code.length>300){const c=mk();c.title="Earlier project";c.code=o.code;S.chats.push(c);S.cur=c.id;S.token=S.token||o.token||"";S.repo=o.repo||S.repo}}catch(e){}
-if(/SmolLM2-360M/.test(S.model))S.model="Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC";
-if(!S.chats.length){const c=mk();S.chats.push(c);S.cur=c.id}
-const cur=()=>S.chats.find(c=>c.id===S.cur)||S.chats[0];
-let saveT=0,busy=false,stopped=false,engine=null,loaded=null,prevT=0,last="";
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S));$("saved").textContent="Saved locally"}catch(e){$("saved").textContent="Storage full: download your work"}},300)}
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-function toast(h,ms){const t=$("toast");t.innerHTML=h;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",ms||6000)}
+const h=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const K="gridless.desktop.v1";
+let S={wall:0,wallUrl:"",acc:"#3b82f6",dark:false,custom:[],notes:""};
+try{Object.assign(S,JSON.parse(localStorage.getItem(K)||"{}"))}catch(e){}
+if(S.acc==="#d08a5e")S.acc="#3b82f6";
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const all=()=>[...APPS,...S.custom];
+const hue=a=>a.hue!=null?a.hue:[...a.name].reduce((x,c)=>x+c.charCodeAt(0),0)*37%360;
+function tile(a,cls){const t=h("span","tile"+(cls?" "+cls:""),a.icon||"📦"),H=hue(a);t.style.background=`linear-gradient(145deg,hsl(${H} 80% 64%),hsl(${(H+38)%360} 72% 46%))`;return t}
+const WALLS=[
+ "radial-gradient(900px 600px at 12% 8%,rgba(124,92,255,.7),transparent),radial-gradient(800px 600px at 90% 15%,rgba(255,122,182,.6),transparent),radial-gradient(1000px 700px at 55% 105%,rgba(255,179,102,.7),transparent),linear-gradient(160deg,#2b6bff,#6a3df0 55%,#c04bd6)",
+ "linear-gradient(160deg,#0f2027,#203a43 50%,#2c5364)",
+ "radial-gradient(900px 700px at 80% 0%,rgba(255,210,120,.8),transparent),linear-gradient(170deg,#ff6b6b,#c44569 55%,#574b90)",
+ "radial-gradient(800px 600px at 20% 100%,rgba(80,220,170,.6),transparent),linear-gradient(160deg,#134e5e,#71b280)",
+ "radial-gradient(circle at 30% 20%,#5b4b9a,#14121f 70%)",
+ "linear-gradient(160deg,#e0eafc,#cfdef3 50%,#a1c4fd)"];
+function theme(){
+  document.documentElement.style.setProperty("--acc",S.acc);
+  document.body.classList.toggle("dark",!!S.dark);
+  document.body.style.background=S.wallUrl?'center/cover no-repeat url("'+S.wallUrl.replace(/["\\)]/g,"")+'")':(WALLS[S.wall]||WALLS[0]);
+}
+const toggleDark=()=>{S.dark=!S.dark;save();theme()};
+const fs=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()};
+$("bTheme").onclick=toggleDark;$("bFs").onclick=fs;
 
-/* ----- preview ----- */
-function render(force){const go=()=>{const c=cur().code;if(c!==last){last=c;$("frame").srcdoc=c}};if(force){clearTimeout(prevT);prevT=0;go()}else if(!prevT)prevT=setTimeout(()=>{prevT=0;go()},500)}
-function setCode(c,force){cur().code=c;if($("code").style.display==="block")$("code").value=c;render(force);save()}
-function extractHtml(t){const m=t.match(/```(?:html)?\s*\n?([\s\S]*?)(?:```|$)/i),h=m?m[1]:t,i=h.search(/<!DOCTYPE|<html|<body/i);return i<0?"":h.slice(i).trim()}
-function finalize(h){
-  h=h.replace(/<\/html>[\s\S]*$/i,"</html>").replace(/<[^>]*$/,"");
-  for(const t of["style","script"]){const o=(h.match(new RegExp("<"+t+"[\\s>]","gi"))||[]).length,c=(h.match(new RegExp("</"+t+">","gi"))||[]).length;if(o>c)h+="\n</"+t+">"}
-  if(!/<html/i.test(h))h='<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Site</title></head>'+(/<body/i.test(h)?h:"<body>"+h);
-  if(!/<\/body>/i.test(h))h+="\n</body>";if(!/<\/html>/i.test(h))h+="\n</html>";
-  if(!/name=["']viewport/i.test(h))h=h.replace(/<head[^>]*>/i,m=>m+'<meta name="viewport" content="width=device-width,initial-scale=1">');
-  return h.replace(/<head[^>]*>/i,m=>m+"<style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;line-height:1.5}img,svg{max-width:100%}</style>");
+/* ---------- desktop, dock, launcher ---------- */
+let lastTap={id:"",t:0};
+function drawAll(){
+  const d=$("desk");d.innerHTML="";
+  all().forEach(a=>{
+    const b=h("button","ico");b.append(tile(a),h("b",0,a.name));
+    b.onclick=()=>{d.querySelectorAll(".ico").forEach(x=>x.classList.remove("sel"));b.classList.add("sel");const n=Date.now();if(lastTap.id===a.id&&n-lastTap.t<450){openApp(a);lastTap={id:"",t:0}}else lastTap={id:a.id,t:n}};
+    b.onkeydown=e=>{if(e.key==="Enter")openApp(a)};d.append(b);
+  });
+  const k=$("dock");k.innerHTML="";
+  const lb=h("button","dk");lb.dataset.n="Apps";lb.setAttribute("aria-label","All apps");
+  const lt=h("span","tile","⠿");lt.style.background="linear-gradient(145deg,#ffffff,#d9dde6)";lt.style.color="#333";lb.append(lt);
+  lb.onclick=e=>{e.stopPropagation();const l=$("launch");l.hidden=!l.hidden;if(!l.hidden){$("q").value="";drawLaunch("");$("q").focus()}};
+  k.append(lb,h("div","sep"));
+  all().forEach(a=>{const b=h("button","dk");b.dataset.n=a.name;b.dataset.id=a.id;b.setAttribute("aria-label",a.name);b.append(tile(a));
+    b.onclick=()=>{const o=wins.get(a.id);if(!o)openApp(a);else if(o.el.hidden){o.el.hidden=false;focusWin(o)}else if(activeId===a.id)minWin(o);else focusWin(o)};k.append(b)});
+  updateRun();drawLaunch($("q").value);
 }
-const looping=s=>s.length>=600&&s.split(s.slice(-80)).length>3;
+function updateRun(){document.querySelectorAll(".dk[data-id]").forEach(b=>{const o=wins.get(b.dataset.id);b.classList.toggle("run",!!o);b.classList.toggle("on",!!o&&!o.el.hidden&&activeId===b.dataset.id)})}
+function drawLaunch(f){
+  const L=$("lgrid");L.innerHTML="";f=(f||"").toLowerCase();
+  all().filter(a=>a.name.toLowerCase().includes(f)).forEach(a=>{const b=h("button");b.append(tile(a),h("span",0,a.name));b.onclick=()=>{$("launch").hidden=true;openApp(a)};L.append(b)});
+}
+$("q").oninput=()=>drawLaunch($("q").value);
+$("q").onkeydown=e=>{if(e.key==="Enter"){const b=$("lgrid").querySelector("button");if(b)b.click()}if(e.key==="Escape")$("launch").hidden=true};
+document.addEventListener("pointerdown",e=>{if(!e.target.closest("#launch,#dock"))$("launch").hidden=true;if(!e.target.closest("#ctx"))$("ctx").hidden=true});
+document.addEventListener("contextmenu",e=>{
+  if(e.target.closest(".win,#dock,#top,#launch"))return;e.preventDefault();
+  const c=$("ctx");c.innerHTML="";
+  [["Open Settings",()=>{const a=APPS.find(x=>x.id==="settings");if(a)openApp(a)}],["Next wallpaper",()=>{S.wall=(S.wall+1)%WALLS.length;S.wallUrl="";save();theme()}],["Light or dark mode",toggleDark],["Fullscreen",fs]].forEach(([n,f])=>{const b=h("button",0,n);b.onclick=()=>{c.hidden=true;f()};c.append(b)});
+  c.style.left=Math.min(e.clientX,innerWidth-200)+"px";c.style.top=Math.min(e.clientY,innerHeight-190)+"px";c.hidden=false;
+});
 
-/* ----- chats ----- */
-function bubble(m){
-  const d=document.createElement("div");d.className="m "+m.r;
-  if(m.url){d.append(m.t+" ");const a=document.createElement("a");a.href=m.url;a.target="_blank";a.rel="noopener";a.textContent=m.url;d.append(a,document.createElement("br"));
-    const b=document.createElement("button");b.textContent="Copy link";b.onclick=()=>{navigator.clipboard.writeText(m.url).then(()=>b.textContent="Copied")};d.append(b)}
-  else d.textContent=m.t;
-  if(m.plan)addPlanButtons(d,m);
-  $("log").appendChild(d);$("log").scrollTop=1e9;return d;
+/* ---------- window manager ---------- */
+const wins=new Map();let z=10,activeId="";
+function focusWin(o){wins.forEach(x=>x.el.classList.remove("active"));o.el.classList.add("active");o.el.style.zIndex=++z;activeId=o.app.id;updateRun()}
+function minWin(o){o.el.hidden=true;activeId="";updateRun()}
+function closeWin(o){o.el.remove();wins.delete(o.app.id);if(activeId===o.app.id)activeId="";updateRun()}
+function openApp(app){
+  const ex=wins.get(app.id);if(ex){ex.el.hidden=false;focusWin(ex);return}
+  const w=h("div","win"),o={app,el:w},n=wins.size;
+  const W=Math.min(app.w||800,innerWidth-20),H=Math.min(app.h||560,innerHeight-130);
+  w.style.cssText=`left:${Math.max(8,Math.min(70+n*30,innerWidth-W-8))}px;top:${Math.max(44,50+n*28)}px;width:${W}px;height:${H}px`;
+  const tb=h("div","tb"),t=h("div","t"),ctl=h("div","ctl");
+  t.append(tile(app,"sm"),h("span",0,app.name));
+  const bm=h("button","m","–"),bz=h("button","z","+"),bc=h("button","x","×");
+  bm.title="Minimise";bz.title="Maximise";bc.title="Close";[bm,bz,bc].forEach(b=>b.setAttribute("aria-label",b.title));
+  ctl.append(bm,bz,bc);tb.append(t,ctl);
+  const body=h("div","wbody"),rs=h("div","rs");w.append(tb,body,rs);document.body.append(w);wins.set(app.id,o);
+  if(app.builtin&&BUILTIN[app.builtin])BUILTIN[app.builtin](body);
+  else{const f=document.createElement("iframe");f.title=app.name;f.allow="webgpu; clipboard-write; clipboard-read; fullscreen";f.src=app.url;body.append(f)}
+  bm.onclick=()=>minWin(o);bc.onclick=()=>closeWin(o);
+  const mx=()=>w.classList.toggle("max");bz.onclick=mx;tb.ondblclick=e=>{if(!e.target.closest("button"))mx()};
+  w.addEventListener("pointerdown",()=>{if(activeId!==app.id)focusWin(o)},true);
+  drag(tb,e=>w.classList.contains("max")?null:{x:e.clientX-w.offsetLeft,y:e.clientY-w.offsetTop},(e,s)=>{
+    w.style.left=Math.min(Math.max(e.clientX-s.x,80-w.offsetWidth),innerWidth-80)+"px";
+    w.style.top=Math.min(Math.max(e.clientY-s.y,32),innerHeight-100)+"px"});
+  drag(rs,e=>({x:w.offsetWidth-e.clientX,y:w.offsetHeight-e.clientY}),(e,s)=>{
+    w.style.width=Math.max(300,e.clientX+s.x)+"px";w.style.height=Math.max(200,e.clientY+s.y)+"px"});
+  if(innerWidth<760)w.classList.add("max");
+  focusWin(o);
 }
-function say(t,r,url,isChat){const m={r:r||"a",t,url};if(isChat)m.c=1;const c=cur();c.msgs.push(m);c.msgs=c.msgs.slice(-80);save();return bubble(m)}
-const CCHIPS=["Explain how photosynthesis works in simple terms","What is the difference between RAM and storage?","Give me a 3-day study plan for learning basic Spanish"];
-const CHIPS=["A landing page for a bike repair shop with prices and a contact form","A personal portfolio with a dark theme and project cards","A to-do list app that saves tasks in the browser"];
-function showChat(){
-  const c=cur();$("title").textContent=c.title;$("log").innerHTML="";
-  if(!c.msgs.length){const h=document.createElement("div");h.id="hello";const chat=c.mode==="chat";h.innerHTML=chat?"<h2>Ask me anything</h2>A general-knowledge chat bot running on your device. It has no internet, so it can be wrong or out of date.":"<h2>What shall we build?</h2>Describe a website and it appears on the right. Simple pages work on small models. Games and interactive apps need much bigger models.";
-    const w=document.createElement("div");w.className="chips";(chat?CCHIPS:CHIPS).forEach(t=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{$("prompt").value=t;$("prompt").focus()};w.append(b)});h.append(w);$("log").append(h)}
-  else c.msgs.forEach(bubble);
-  last="";render(true);if($("code").style.display==="block")$("code").value=c.code;liveChip();applyMode();
+function drag(el,start,move){
+  el.addEventListener("pointerdown",e=>{
+    if(e.target.closest("button")||e.button>0)return;
+    const s=start(e);if(!s)return;
+    el.setPointerCapture(e.pointerId);document.body.classList.add("drag");
+    const mv=ev=>move(ev,s);
+    const up=()=>{el.removeEventListener("pointermove",mv);el.removeEventListener("pointerup",up);el.removeEventListener("pointercancel",up);document.body.classList.remove("drag")};
+    el.addEventListener("pointermove",mv);el.addEventListener("pointerup",up);el.addEventListener("pointercancel",up);
+  });
 }
-function liveChip(){const c=cur(),a=$("live");a.hidden=!c.url;if(c.url){a.href=c.url;a.textContent="Live: "+c.url.replace("https://","")}}
-function list(){
-  const L=$("list");L.innerHTML="";
-  S.chats.slice().reverse().forEach(c=>{
-    const d=document.createElement("div");d.className="ci"+(c.id===S.cur?" on":"");
-    const s=document.createElement("span");s.textContent=(c.mode==="chat"?"💬 ":"")+c.title;d.append(s);
-    if(c.url){const l=document.createElement("small");l.textContent="live";d.append(l)}
-    const x=document.createElement("button");x.className="ghost";x.textContent="✕";x.title="Delete chat";x.onclick=e=>{e.stopPropagation();if(busy)return toast("Wait for the current build to finish.");if(confirm("Delete this chat and its code? A published site stays online.")){S.chats=S.chats.filter(k=>k!==c);if(!S.chats.length)S.chats.push(mk());if(S.cur===c.id)S.cur=S.chats[S.chats.length-1].id;save();list();showChat()}};
-    d.append(x);d.onclick=()=>{if(busy)return toast("Wait for the current build to finish.");S.cur=c.id;save();$("drawer").classList.remove("show");showChat()};
-    L.append(d)});
-}
-function newChat(){if(busy)return toast("Wait for the current build to finish.");const c=mk();S.chats.push(c);S.cur=c.id;save();$("drawer").classList.remove("show");showChat();$("prompt").focus()}
-$("btnMenu").onclick=()=>{list();$("drawer").classList.add("show")};
-$("dClose").onclick=()=>$("drawer").classList.remove("show");
-$("btnChat").onclick=()=>{
-  if(busy)return toast("Wait for the current response to finish.");
-  const c=cur(),m2=c.mode==="chat"?"build":"chat";
-  if(!c.msgs.length){c.mode=m2;save();showChat();return}
-  const n=mk();n.mode=m2;S.chats.push(n);S.cur=n.id;save();showChat();$("prompt").focus();
+
+/* ---------- built-in apps ---------- */
+const BUILTIN={
+  notes(b){
+    const t=h("textarea","notes");t.value=S.notes;t.placeholder="Write anything. It saves automatically in this browser.";t.setAttribute("aria-label","Notes");
+    t.oninput=()=>{S.notes=t.value;save()};b.append(t);
+  },
+  browser(b){
+    const bar=h("div","tool"),inp=h("input"),go=h("button",0,"Go"),ext=h("button",0,"↗"),f=document.createElement("iframe");
+    inp.placeholder="Enter a web address, e.g. wikipedia.org";inp.setAttribute("aria-label","Web address");ext.title="Open in a new tab";ext.setAttribute("aria-label","Open in a new tab");
+    const url=()=>{let u=inp.value.trim();if(!u)return"";if(!/^https?:\/\//i.test(u))u="https://"+u;inp.value=u;return u};
+    go.onclick=()=>{const u=url();if(u)f.src=u};ext.onclick=()=>{const u=url();if(u)window.open(u,"_blank","noopener")};
+    inp.onkeydown=e=>{if(e.key==="Enter")go.click()};
+    f.title="Browser page";f.srcdoc='<body style="font:15px system-ui;padding:32px;color:#444;background:#fff"><h2>Browser</h2><p>Type an address above and press Go.</p><p>Many sites (Google, YouTube, GitHub and others) refuse to load inside another page. If a page stays blank, press the arrow button to open it in a new tab.</p></body>';
+    bar.append(inp,go,ext);b.append(bar,f);
+  },
+  settings(b){
+    b.classList.add("pad");
+    b.innerHTML='<h3>Appearance</h3><div class="f"><button class="dm"></button></div><h3>Wallpaper</h3><div class="sw"></div><div class="f"><input class="wu" placeholder="Or paste an image address (https://…)" aria-label="Wallpaper image address"><button class="wa">Use image</button></div>'+
+      '<h3>Accent colour</h3><input type="color" class="ac" aria-label="Accent colour" style="width:64px;height:36px;padding:2px">'+
+      '<h3>Your apps</h3><div class="cl"></div><div class="f"><input class="an" placeholder="Name" aria-label="App name"><input class="ai" placeholder="Emoji" maxlength="4" style="max-width:72px;flex:none" aria-label="App emoji"><input class="au" placeholder="https://… or page.html" aria-label="App address"><button class="aa primary">Add</button></div>'+
+      '<p class="hint">Custom apps open any web address or page in this site. Sites that block embedding will show blank.</p>'+
+      '<h3>Desktop</h3><button class="rst">Reset desktop</button><p class="hint">To add apps for good, edit the APPS list at the top of index.html.</p>';
+    const q=s=>b.querySelector(s),sw=q(".sw"),dm=q(".dm");
+    const lab=()=>dm.textContent=S.dark?"Switch to light mode":"Switch to dark mode";lab();dm.onclick=()=>{toggleDark();lab()};
+    WALLS.forEach((g,i)=>{const x=h("button");x.style.background=g;x.title="Wallpaper "+(i+1);x.setAttribute("aria-label",x.title);x.onclick=()=>{S.wall=i;S.wallUrl="";save();theme()};sw.append(x)});
+    q(".wa").onclick=()=>{const u=q(".wu").value.trim();if(/^https?:\/\//i.test(u)){S.wallUrl=u;save();theme()}};
+    q(".ac").value=S.acc;q(".ac").oninput=e=>{S.acc=e.target.value;save();theme()};
+    const list=()=>{
+      const L=q(".cl");L.innerHTML="";
+      if(!S.custom.length)L.append(h("p","hint","No custom apps yet."));
+      S.custom.forEach(a=>{const r=h("div","ci"),x=h("button",0,"Remove");r.append(h("span",0,(a.icon||"📦")+"  "+a.name+"  ("+a.url+")"),x);
+        x.onclick=()=>{S.custom=S.custom.filter(k=>k.id!==a.id);save();const o=wins.get(a.id);if(o)closeWin(o);drawAll();list()};L.append(r)});
+    };
+    q(".aa").onclick=()=>{
+      const name=q(".an").value.trim(),url=q(".au").value.trim();
+      if(!name||!/^(https?:\/\/\S+|[\w./~-]+(\?\S*)?)$/i.test(url))return alert("Enter a name and an address that starts with https:// or is a page name like page.html");
+      S.custom.push({id:"c"+Date.now(),name,icon:q(".ai").value.trim()||"📦",url,w:900,h:600});save();drawAll();list();
+      q(".an").value=q(".ai").value=q(".au").value="";
+    };
+    q(".rst").onclick=()=>{if(confirm("Reset wallpaper, colour, theme and custom apps? Your notes stay.")){S.wall=0;S.wallUrl="";S.acc="#3b82f6";S.dark=false;S.custom=[];save();theme();drawAll();list();q(".ac").value=S.acc;lab()}};
+    list();
+  }
 };
-$("btnNew").onclick=newChat;$("dNew").onclick=newChat;
 
-/* ----- model + worker ----- */
-const workerSrc='import {WebWorkerMLCEngineHandler} from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm";const h=new WebWorkerMLCEngineHandler();self.onmessage=m=>h.onmessage(m);';
-const updWarn=()=>$("warn").classList.toggle("show",$("model").selectedOptions[0].dataset.heavy==="1");
-async function ensureEngine(){
-  if(!navigator.gpu)throw new Error("This browser has no WebGPU. Use a recent Chrome or Edge and check chrome://gpu.");
-  const id=$("model").value;if(engine&&loaded===id)return engine;
-  $("bar").style.display="block";
-  const cb=r=>{$("status").textContent=r.text;$("bar").firstChild.style.width=Math.round((r.progress||0)*100)+"%"};
-  if(!engine){const w=new Worker(URL.createObjectURL(new Blob([workerSrc],{type:"text/javascript"})),{type:"module"});engine=await CreateWebWorkerMLCEngine(w,id,{initProgressCallback:cb})}
-  else{engine.setInitProgressCallback(cb);await engine.reload(id)}
-  loaded=id;$("bar").style.display="none";$("status").textContent="Model ready";return engine;
-}
-const SYS="You are a senior web designer and front-end developer. Write ONE complete, working, self-contained HTML5 page. Rules: put all CSS in a <style> tag and any JavaScript in a <script> tag; no external files, fonts, images or CDN links (use CSS gradients, emoji or inline SVG for visuals); mobile-friendly layout with flexbox or grid; a clear colour palette, good spacing and readable type; real, specific copy instead of lorem ipsum; include a header or nav, a hero, two or three content sections and a footer unless the request says otherwise; make buttons and forms actually work. If existing code is given, return the full updated page with the requested change. Reply with only a ```html code block that starts with <!DOCTYPE html>. No explanations.";
-const NOTE_B="Small models are fine for simple pages. Games, apps and anything with moving parts or logic need much bigger models (3B or larger), and may still take a few tries.";
-const NOTE_C="Chat mode runs on a small local model with no internet, so it can be wrong or out of date. Double-check anything important.";
-const CHAT_SYS="You are a friendly, knowledgeable assistant for general questions. Answer clearly and concisely in plain text, using short paragraphs or simple lists. If you are not sure, say so instead of guessing. You have no internet access and your knowledge has a cutoff date, so you may not know recent events.";
-const PLAN_SYS="You are a web design planner. Given a website or web app request, write a short build plan as a plain list under these headings: Purpose (one line), Style (colours, fonts, mood), Layout (each section in order), Features (each interactive feature with the exact behaviour, step by step: how it starts, what happens on every click or key press, how it ends and resets), Notes. Keep it under 250 words. Do not write any code.";
-function applyMode(){
-  const c=cur(),chat=c.mode==="chat",small=/SmolLM2/.test($("model").value);
-  $("btnChat").textContent=chat?"Builder":"Chat Bot";$("btnChat").title=chat?"Start a new website chat":"Chat about anything";
-  $("note").textContent=chat?NOTE_C:NOTE_B;
-  $("prompt").placeholder=chat?"Ask anything…":c.plan?"Tell me what to change in the plan…":"Describe the site you want, or what to change…";
-  const off=chat||small;$("plan").disabled=off;$("plan").checked=!off&&!!S.plan;$("planL").classList.toggle("off",off);
-  $("planL").title=chat?"Planning is for building websites.":small?"Planning needs the 1.5B model or larger.":"Writes a short plan first, then builds from it. Works best on 3B or larger models.";
-}
-function begin(){busy=true;stopped=false;$("send").disabled=true;$("btnStop").disabled=false}
-function end(){busy=false;$("send").disabled=false;$("btnStop").disabled=true;applyMode()}
-function fail(err){say("Error: "+(err&&err.message||err),"e");$("status").textContent="Failed";$("bar").style.display="none";if(/memory|OOM|device lost|allocation/i.test(String(err&&err.message)))say("The model ran out of memory. Pick a lighter model.","e")}
-function intro(p){const ch=cur();if($("hello"))$("hello").remove();if(ch.title==="New chat"){ch.title=p.slice(0,34);$("title").textContent=ch.title}}
-async function llm(messages,o,onText){
-  const e=await ensureEngine();
-  const st=await e.chat.completions.create({messages,stream:true,top_p:0.9,...o});
-  let acc="",n=0;for await(const c of st){acc+=c.choices[0]?.delta?.content||"";if(++n%4===0)onText(acc)}
-  onText(acc);return acc;
-}
-function addPlanButtons(d,m){
-  const c=cur();if(!c.plan||c.msgs.filter(x=>x.plan).pop()!==m)return;
-  const r=document.createElement("div");r.className="row";r.style.marginTop="8px";
-  const b=document.createElement("button");b.className="primary";b.textContent="Build from this plan";b.onclick=()=>{if(!busy&&c.plan)build(c.plan.req,c.plan.text,true)};
-  const v=document.createElement("button");v.textContent="Revise plan";v.onclick=()=>{$("prompt").placeholder="Tell me what to change in the plan…";$("prompt").focus()};
-  r.append(b,v);d.append(r);
-}
-async function generate(){
-  const p=$("prompt").value.trim();if(!p||busy)return;
-  if(cur().mode==="chat")return chatSend(p);
-  if($("plan").checked&&!$("plan").disabled)return planSend(p);
-  return build(p,"",false);
-}
-async function chatSend(p){
-  begin();const ch=cur();intro(p);say(p,"u",undefined,1);$("prompt").value="";
-  try{
-    const keep=[];let tot=0;
-    for(let i=ch.msgs.length-1;i>=0&&keep.length<8;i--){const m=ch.msgs[i];if(!m.c)continue;tot+=Math.min(m.t.length,1500);if(tot>4500&&keep.length)break;keep.unshift({role:m.r==="u"?"user":"assistant",content:m.t.slice(0,1500)})}
-    say("…","a",undefined,1);const live=$("log").lastChild,mo=ch.msgs[ch.msgs.length-1];
-    $("status").textContent="Thinking…";
-    const t=(await llm([{role:"system",content:CHAT_SYS},...keep],{temperature:0.6,repetition_penalty:1.05,max_tokens:700},x=>{live.textContent=x||"…";$("log").scrollTop=1e9})).trim();
-    mo.t=t||"I didn't get an answer. Try rephrasing, or pick a larger model.";live.textContent=mo.t;save();$("status").textContent="Ready";
-  }catch(err){fail(err)}
-  end();
-}
-async function planSend(p){
-  begin();const ch=cur();intro(p);say(p,"u");$("prompt").value="";
-  try{
-    const req=ch.plan?ch.plan.req:p;
-    const u=ch.plan?"Website request: "+req+"\n\nCurrent plan:\n"+ch.plan.text.slice(0,1800)+"\n\nRevise the plan using this feedback: "+p:"Website request: "+p;
-    say("Planning…");const live=$("log").lastChild,mo=ch.msgs[ch.msgs.length-1];
-    $("status").textContent="Planning…";
-    const t=(await llm([{role:"system",content:PLAN_SYS},{role:"user",content:u}],{temperature:0.4,repetition_penalty:1.05,max_tokens:450},x=>{live.textContent="Planning…\n\n"+x;$("log").scrollTop=1e9})).trim();
-    if(t.length<40){mo.r="e";mo.t="The model couldn't write a plan. Turn off Plan, or pick a larger model.";live.className="m e";live.textContent=mo.t}
-    else{ch.plan={req,text:t};mo.t="Here's the plan:\n\n"+t;mo.plan=1;live.textContent=mo.t;addPlanButtons(live,mo)}
-    save();$("status").textContent="Ready";
-  }catch(err){fail(err)}
-  end();
-}
-async function build(p,plan,fromBtn){
-  if(busy)return;begin();
-  const ch=cur(),backup=ch.code;
-  intro(p);if(!fromBtn){say(p,"u");$("prompt").value=""}
-  ch.plan=null;
-  try{
-    const e=await ensureEngine();
-    if(/\b(game|snake|tetris|pong|chess|calculator|quiz|todo|to-do|app|dashboard|timer|tracker)\b/i.test(p)&&$("model").selectedOptions[0].dataset.heavy!=="1")say("Heads up: games and apps need much bigger models than this one. I'll try, but the result may not work. The 3B model or larger is far more reliable.");
-    const edit=!plan&&ch.code!==EMPTY&&ch.code.length<=3500;
-    const out=say("Building…");const live=$("log").lastChild;
-    if(!plan&&ch.code!==EMPTY&&!edit)live.textContent="This page is too large to edit with the model's memory, so I'm building a new one. Building…";
-    $("status").textContent="Generating…";
-    const user=edit?"Current page:\n```html\n"+ch.code+"\n```\n\nChange to make: "+p:"Build this website: "+p+(plan?"\n\nFollow this plan exactly:\n"+plan.slice(0,1800):"");
-    const stream=await e.chat.completions.create({messages:[{role:"system",content:SYS},{role:"user",content:user}],stream:true,temperature:0.3,top_p:0.9,repetition_penalty:1.05,max_tokens:edit?2400:plan?3000:3500,stop:["</html>"]});
-    let acc="",n=0;
-    for await(const c of stream){
-      acc+=c.choices[0]?.delta?.content||"";
-      if(++n%6===0){const h=extractHtml(acc);if(h.length>40){ch.code=finalize(h);render();live.textContent="Building… "+acc.length+" characters"}}
-    }
-    const h=extractHtml(acc);let msg;
-    if(h.length>200){setCode(finalize(h),true);msg={r:"a",t:stopped?"Stopped. I kept everything built so far.":"Done. Ask for changes, or press Publish Live to put it online."}}
-    else{ch.code=backup;render(true);msg={r:"e",t:"The model stopped before it produced a usable page, so I kept your previous one. Try a more specific prompt or the Qwen 1.5B model."}}
-    ch.msgs[ch.msgs.length-1]=msg;live.className="m "+msg.r;live.textContent=msg.t;save();$("status").textContent="Ready";
-  }catch(err){ch.code=backup;render(true);fail(err)}
-  end();
-}
-$("send").onclick=generate;$("btnStop").onclick=()=>{stopped=true;engine&&engine.interruptGenerate()};
-$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey||!e.shiftKey)){e.preventDefault();generate()}});
-$("model").addEventListener("change",()=>{S.model=$("model").value;updWarn();applyMode();save()});
-$("plan").addEventListener("change",()=>{S.plan=$("plan").checked;save()});
-
-/* ----- tabs / export ----- */
-function tab(code){$("frame").style.display=code?"none":"block";$("code").style.display=code?"block":"none";$("tPrev").classList.toggle("on",!code);$("tCode").classList.toggle("on",code);if(code)$("code").value=cur().code;else render(true)}
-$("tPrev").onclick=()=>tab(false);$("tCode").onclick=()=>tab(true);
-$("code").addEventListener("input",()=>{cur().code=$("code").value;save()});
-$("btnDl").onclick=()=>{const u=URL.createObjectURL(new Blob([cur().code],{type:"text/html"})),a=document.createElement("a");a.href=u;a.download="index.html";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)};
-
-/* ----- publish ----- */
-function b64(s){const b=new TextEncoder().encode(s);let o="";for(let i=0;i<b.length;i+=0x8000)o+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(o)}
-let after=false;
-function showModal(){$("repo").value=S.repo;$("token").value=S.token;$("modal").classList.add("show");(S.repo&&!S.token?$("token"):$("repo")).focus()}
-$("btnSettings").onclick=()=>{after=false;$("drawer").classList.remove("show");showModal()};
-$("mCancel").onclick=()=>$("modal").classList.remove("show");
-$("mSave").onclick=async()=>{
-  const r=$("repo").value.trim().replace(/^https?:\/\/github\.com\//,"").replace(/\.git$/,"").replace(/^\/|\/$/g,""),t=$("token").value.trim();
-  if(!/^[\w.-]+\/[\w.-]+$/.test(r)||!t)return toast("Enter the repository as owner/name and paste a token.");
-  const b=$("mSave");b.disabled=true;b.textContent="Checking…";
-  try{
-    const H={Authorization:"Bearer "+t,Accept:"application/vnd.github+json"};
-    const g=await fetch("https://api.github.com/repos/"+r,{headers:H});
-    if(g.status===401)throw new Error("GitHub rejected that token. Generate a new one and paste it again.");
-    if(g.status===404)throw new Error("Repository not found, or the token can't see it. Check the owner/name.");
-    const j=await g.json();
-    if(j.permissions&&!j.permissions.push)throw new Error("This token can't write to that repo.");
-    const p=await fetch("https://api.github.com/repos/"+r+"/pages",{headers:H});
-    if(p.status===404)await fetch("https://api.github.com/repos/"+r+"/pages",{method:"POST",headers:{...H,"Content-Type":"application/json"},body:JSON.stringify({source:{branch:j.default_branch||"main",path:"/"}})}).catch(()=>{});
-    S.repo=r;S.token=t;save();$("modal").classList.remove("show");
-    if(after)publish();else toast("Connected. Publish Live now works with one click.");
-  }catch(err){toast(esc(err.message),8000)}
-  b.disabled=false;b.textContent="Save";
-};
-async function publish(){
-  if(!S.token||!S.repo){after=true;return showModal()}
-  const ch=cur();if(ch.code===EMPTY)return toast("Build a page first, then publish it.");
-  const btn=$("btnPub");btn.disabled=true;btn.textContent="Publishing…";
-  try{
-    const [owner,repo]=S.repo.split("/"),api=f=>`https://api.github.com/repos/${owner}/${repo}/contents/${f}/index.html`;
-    const H={Authorization:"Bearer "+S.token,Accept:"application/vnd.github+json","Content-Type":"application/json"};
-    if(ch.repo!==S.repo)ch.folder="";
-    let folder=ch.folder,sha,done="";
-    if(folder){const g=await fetch(api(folder),{headers:H});if(g.ok)sha=(await g.json()).sha;else if(g.status===404)folder=""}
-    for(let i=0;i<5&&!done;i++){
-      const f=folder||String(1000+Math.floor(Math.random()*9000));
-      const res=await fetch(api(f),{method:"PUT",headers:H,body:JSON.stringify({message:(sha?"Update site ":"Publish site ")+f,content:b64(ch.code),...(sha?{sha}:{})})});
-      if(res.ok){done=f;break}
-      if(res.status===422&&!folder)continue;
-      const j=await res.json().catch(()=>({}));
-      if(res.status===401)S.token="";
-      throw new Error((j.message||"GitHub error "+res.status)+(res.status===401?" (token rejected, enter a new one)":res.status===404?" (repo not found, or the token lacks access)":""));
-    }
-    if(!done)throw new Error("Could not find a free folder number. Try again.");
-    const base=repo.toLowerCase()===(owner+".github.io").toLowerCase()?`https://${owner}.github.io/`:`https://${owner}.github.io/${repo}/`;
-    const wasLive=!!ch.url;ch.folder=done;ch.repo=S.repo;ch.url=base+done+"/";save();liveChip();
-    say(wasLive?"Updated. GitHub Pages may take a minute to refresh:":"Published. GitHub Pages can take a minute to go live:","a",ch.url);
-    toast("Published: <a href=\""+esc(ch.url)+"\" target=\"_blank\" rel=\"noopener\">"+esc(ch.url)+"</a>",20000);
-  }catch(err){save();toast("Publish failed: "+esc(err.message),9000)}
-  btn.disabled=false;btn.textContent="Publish Live";
-}
-const pm=$("pubmodal");
-function checkReady(){if(cur().code===EMPTY){toast("Build a page first, then publish it.");return false}return true}
-$("btnPub").onclick=()=>{if(checkReady())pm.style.display="flex"};
-$("pClose").onclick=()=>pm.style.display="none";
-$("pHtmlPub").onclick=()=>{
-  navigator.clipboard.writeText(cur().code).then(()=>toast("Code copied. Paste it into the box on HTML Pub and press Publish.",9000),()=>toast("Couldn't copy automatically. Use Download Code, then open the file and paste its text.",9000));
-  window.open("https://htmlpub.com/publish-html-online","_blank","noopener");pm.style.display="none";
-};
-$("pShare").onclick=()=>{$("btnDl").click();toast("Saved as index.html. Drag it onto the sharable.link page that just opened.",9000);window.open("https://sharable.link/free-html-hosting","_blank","noopener");pm.style.display="none"};
-$("pGit").onclick=()=>{pm.style.display="none";after=false;publish()};
-
-/* ----- start ----- */
-$("plan").checked=!!S.plan;$("model").value=S.model;if(!$("model").value)$("model").selectedIndex=0;
-updWarn();showChat();
-if(!navigator.gpu)say("WebGPU is not available in this browser, so the AI can't run here. You can still edit code in the Code tab, download it and publish it.","e");
+/* ---------- clock + start ---------- */
+function tick(){const d=new Date();$("clock").textContent=d.toLocaleDateString([],{weekday:"short",day:"numeric",month:"short"})+"  "+d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
+tick();setInterval(tick,15000);
+theme();drawAll();
 </script>
 </body>
 </html>

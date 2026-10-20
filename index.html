@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" crxlauncher-bridged="" crxlauncher=""><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Web Builder</title>
@@ -73,17 +71,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:800px){body{flex-direction:column;overflow:auto}#chat{width:100%;max-width:none;height:85vh;border-right:0;border-bottom:1px solid var(--line)}#right{min-height:75vh}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-</head>
+<style></style></head>
 <body>
 <aside id="chat">
-  <div id="drawer">
+  <div id="drawer" class="">
     <div class="row"><button id="dNew" class="primary">+ New chat</button><button id="dClose">Close</button></div>
-    <div id="list"></div>
+    <div id="list"><div class="ci on"><span>New chat</span><button class="ghost" title="Delete chat">✕</button></div></div>
     <button id="btnSettings">GitHub settings</button>
   </div>
-  <div id="top"><button class="ghost" id="btnMenu" title="All chats">☰ Chats</button><div id="title">New chat</div><button class="ghost" id="btnNew" title="New chat">＋</button></div>
+  <div id="top"><button class="ghost" id="btnMenu" title="All chats">☰ Chats</button><div id="title">New chat</div><button class="ghost" id="btnNew" title="New chat">＋</button><button class="ghost" id="btnChat" title="Try Our Chat Bot" href="gridless.runs-on.dev/chatbot">Chat Bot</button></div>
   <div id="acts"><button id="btnDl">Download Code</button><button id="btnPub" class="primary">Publish Live</button></div>
-  <div id="log" aria-live="polite"></div>
+  <div id="log" aria-live="polite"><div id="hello"><h2>What shall we build?</h2>Describe a website and it appears on the right. Simple pages work on small models. Games and interactive apps need much bigger models.<div class="chips"><button>A landing page for a bike repair shop with prices and a contact form</button><button>A personal portfolio with a dark theme and project cards</button><button>A to-do list app that saves tasks in the browser</button></div></div></div>
   <div id="warn" role="alert">⚠️ Warning: Running deep neural networks locally requires high memory. May freeze or crash your browser tab if you are on a Chromebook or older device.</div>
   <div id="bar"><i></i></div>
   <div id="status"></div>
@@ -97,20 +95,20 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <option value="Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 3B (~2.5 GB), for games and apps</option>
         <option value="Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC" data-heavy="1">⚠️ Heavy: Qwen2.5 Coder 7B (~5 GB), best quality</option>
       </select>
-      <button id="btnStop" disabled>Stop</button>
+      <button id="btnStop" disabled="">Stop</button>
       <button id="send" class="primary" title="Send (Ctrl+Enter)" aria-label="Send">↑</button>
     </div>
   </div>
 </aside>
 <main id="right">
-  <div id="tabs"><button id="tPrev" class="on">Preview</button><button id="tCode">Code</button><div class="sp"><a id="live" target="_blank" rel="noopener" hidden></a><span id="saved"></span></div></div>
-  <iframe id="frame" title="Live preview" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
+  <div id="tabs"><button id="tPrev" class="on">Preview</button><button id="tCode">Code</button><div class="sp"><a id="live" target="_blank" rel="noopener" hidden=""></a><span id="saved">Saved locally</span></div></div>
+  <iframe id="frame" title="Live preview" sandbox="allow-scripts allow-forms allow-modals allow-popups" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;body{font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#f4f4f5;color:#444;text-align:center}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div&gt;&lt;h2&gt;Your page appears here&lt;/h2&gt;&lt;p&gt;Describe a site in the chat and press send.&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
   <textarea id="code" spellcheck="false" aria-label="Generated code"></textarea>
 </main>
-<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mt" class="">
   <div class="box">
     <h2 id="mt">Connect GitHub to publish</h2>
-    <p>One-time setup, about 30 seconds. <a href="https://github.com/settings/tokens/new?scopes=repo&description=AI%20Web%20Builder" target="_blank" rel="noopener" style="color:var(--acc)">Open GitHub's token page</a> (the repo permission is already ticked), choose a long expiry, press Generate token, and paste it below. It stays in this browser only and is sent only to api.github.com. After this, Publish Live adds a folder like <b>your-site/5347</b> to your repo automatically.</p>
+    <p>One-time setup, about 30 seconds. <a href="https://github.com/settings/tokens/new?scopes=repo&amp;description=AI%20Web%20Builder" target="_blank" rel="noopener" style="color:var(--acc)">Open GitHub's token page</a> (the repo permission is already ticked), choose a long expiry, press Generate token, and paste it below. It stays in this browser only and is sent only to api.github.com. After this, Publish Live adds a folder like <b>your-site/5347</b> to your repo automatically.</p>
     <div><label for="repo">Repository (owner/name)</label><input id="repo" autocomplete="off"></div>
     <div><label for="token">GitHub token</label><input id="token" type="password" placeholder="github_pat_…" autocomplete="off"></div>
     <div class="row"><button id="mCancel">Cancel</button><button id="mSave" class="primary">Save</button></div>
@@ -314,5 +312,6 @@ $("model").value=S.model;if(!$("model").value)$("model").selectedIndex=0;
 updWarn();showChat();
 if(!navigator.gpu)say("WebGPU is not available in this browser, so the AI can't run here. You can still edit code in the Code tab, download it and publish it.","e");
 </script>
-</body>
-</html>
+
+
+</body></html>

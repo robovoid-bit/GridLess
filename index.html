@@ -1,1689 +1,1105 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI Build Lab Studio · Zero-Config Generative CAD</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STL CAD Studio v3 — Import, Code &amp; Export</title>
 <style>
   :root {
-    --bg-canvas: #06090e;
-    --bg-panel: rgba(12, 17, 26, 0.86);
-    --bg-input: #080c13;
-    --border: rgba(136, 168, 208, 0.14);
-    --border-bright: rgba(56, 189, 248, 0.45);
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #38bdf8;
-    --accent-indigo: #6366f1;
-    --accent-glow: rgba(56, 189, 248, 0.28);
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --radius-lg: 14px;
-    --radius-md: 9px;
-    --radius-sm: 6px;
+    --bg: #0c0f16;
+    --panel: #131722;
+    --panel-2: #191f2e;
+    --border: #262e42;
+    --text: #e7ebf5;
+    --muted: #939eb8;
+    --accent: #4f8cff;
+    --accent-hover: #699fff;
+    --success: #2ecc71;
+    --danger: #ff5c77;
+    --warn: #f5b942;
   }
 
-  * { box-sizing: border-box; }
-  html, body {
+  * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    width: 100%;
-    height: 100%;
+  }
+
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
-    background: var(--bg-canvas);
-    color: var(--text-primary);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 13px;
-    -webkit-font-smoothing: antialiased;
   }
 
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.22); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.4); }
-
-  #viewport-container {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    background: radial-gradient(circle at 55% 45%, #111a29 0%, #06090e 78%);
-  }
-  canvas { display: block; width: 100%; height: 100%; outline: none; }
-
-  /* Floating Top Bar */
-  header.topbar {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    height: 50px;
-    z-index: 20;
-    background: var(--bg-panel);
-    backdrop-filter: blur(18px) saturate(165%);
-    -webkit-backdrop-filter: blur(18px) saturate(165%);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+  header {
+    height: 54px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 0 14px;
-    gap: 12px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    gap: 10px;
   }
 
   .brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 9px;
     font-weight: 700;
     font-size: 15px;
-    letter-spacing: -0.02em;
-  }
-  .brand-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-indigo));
-    display: grid;
-    place-items: center;
-    box-shadow: 0 0 18px var(--accent-glow);
-    color: #fff;
-    font-size: 15px;
-  }
-  .brand span em {
-    font-style: normal;
-    background: linear-gradient(90deg, #38bdf8, #818cf8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
   }
 
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 4px 11px;
-    border-radius: 999px;
+  .badge {
     font-size: 11px;
-    font-weight: 500;
-    background: rgba(16, 185, 129, 0.12);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    color: #6ee7b7;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(79, 140, 255, 0.16);
+    color: var(--accent);
+    border: 1px solid rgba(79, 140, 255, 0.35);
+    font-weight: 600;
   }
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--success);
-    box-shadow: 0 0 8px var(--success);
-  }
-  .status-dot.busy {
-    background: var(--warning);
-    box-shadow: 0 0 10px var(--warning);
-    animation: pulse 0.85s infinite;
-  }
-  @keyframes pulse { 50% { opacity: 0.3; } }
 
-  .top-actions {
-    margin-left: auto;
+  .controls {
     display: flex;
     align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  select, button, input[type="text"] {
+    font-family: inherit;
+    font-size: 12.5px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 6px 10px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  select, button {
+    cursor: pointer;
+  }
+
+  select:hover, button:hover {
+    border-color: #3b4766;
+    background: #21283b;
+  }
+
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  button.primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  button.success {
+    background: rgba(46, 204, 113, 0.16);
+    border-color: rgba(46, 204, 113, 0.45);
+    color: #6ee7a0;
+    font-weight: 600;
+  }
+
+  button.success:hover {
+    background: rgba(46, 204, 113, 0.26);
+  }
+
+  button.warn {
+    background: rgba(245, 185, 66, 0.14);
+    border-color: rgba(245, 185, 66, 0.42);
+    color: #ffd479;
+    font-weight: 600;
+  }
+
+  button.warn:hover {
+    background: rgba(245, 185, 66, 0.24);
+  }
+
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 45% 55%;
+    min-height: 0;
+  }
+
+  .editor-pane {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    background: var(--panel);
+    min-height: 0;
+  }
+
+  .pane-bar {
+    height: 36px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    background: #10141d;
     gap: 8px;
   }
 
-  .btn {
-    display: inline-flex;
+  .ref-bar {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+    background: #111520;
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .ref-bar code {
+    color: #9ec0ff;
+    background: rgba(79, 140, 255, 0.1);
+    padding: 1px 4px;
+    border-radius: 4px;
+  }
+
+  #codeEditor {
+    flex: 1;
+    width: 100%;
+    resize: none;
+    border: none;
+    outline: none;
+    background: #0b0e15;
+    color: #dde4f7;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 14px;
+    tab-size: 2;
+  }
+
+  .status-bar {
+    min-height: 36px;
+    padding: 6px 12px;
+    border-top: 1px solid var(--border);
+    background: #10141d;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .status-ok {
+    color: #6ee7a0;
+  }
+
+  .status-err {
+    color: var(--danger);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    white-space: pre-wrap;
+  }
+
+  .viewer-pane {
+    position: relative;
+    background: radial-gradient(circle at 50% 35%, #1c2233 0%, #090b10 100%);
+    min-height: 0;
+  }
+
+  #canvasHost {
+    width: 100%;
+    height: 100%;
+  }
+
+  .hud-top {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+  }
+
+  .hud-top button {
+    background: rgba(18, 22, 34, 0.85);
+    backdrop-filter: blur(6px);
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .hud-bottom {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .hud-card {
+    background: rgba(16, 20, 30, 0.85);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .hud-card strong {
+    color: var(--text);
+  }
+
+  /* Modal for copying model description/code to paste into chat */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 7, 12, 0.72);
+    backdrop-filter: blur(4px);
+    z-index: 20;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 7px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: rgba(30, 41, 59, 0.65);
-    color: var(--text-primary);
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.16s ease;
-    white-space: nowrap;
-  }
-  .btn:hover {
-    background: rgba(51, 65, 85, 0.88);
-    border-color: rgba(148, 163, 184, 0.35);
-    transform: translateY(-1px);
-  }
-  .btn:active { transform: translateY(0); }
-  .btn.primary {
-    background: linear-gradient(135deg, #0284c7, #4f46e5);
-    border-color: rgba(125, 211, 252, 0.45);
-    color: #fff;
-    font-weight: 600;
-    box-shadow: 0 4px 18px rgba(2, 132, 199, 0.38);
-  }
-  .btn.primary:hover {
-    filter: brightness(1.12);
-    box-shadow: 0 6px 24px rgba(56, 189, 248, 0.48);
-  }
-  .btn.active {
-    background: rgba(56, 189, 248, 0.18);
-    border-color: var(--accent);
-    color: #7dd3fc;
-  }
-  .btn.danger:hover {
-    background: rgba(239, 68, 68, 0.22);
-    border-color: rgba(239, 68, 68, 0.5);
-    color: #fca5a5;
+    padding: 16px;
   }
 
-  /* Side Docks */
-  .dock-left {
-    position: fixed;
-    top: 74px;
-    left: 12px;
-    bottom: 12px;
-    width: 345px;
-    z-index: 15;
+  .modal-backdrop.open {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
-  }
-  .dock-right {
-    position: fixed;
-    top: 74px;
-    right: 12px;
-    bottom: 12px;
-    width: 315px;
-    z-index: 15;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
   }
 
-  .card {
-    pointer-events: auto;
-    background: var(--bg-panel);
-    backdrop-filter: blur(18px) saturate(165%);
-    -webkit-backdrop-filter: blur(18px) saturate(165%);
+  .modal {
+    width: min(720px, 100%);
+    max-height: 85vh;
+    background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   }
-  .card.grow { flex: 1; min-height: 0; }
 
-  .card-header {
-    padding: 11px 14px;
+  .modal-head {
+    padding: 12px 16px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-secondary);
-  }
-  .card-body {
-    padding: 12px 14px;
-    overflow-y: auto;
-    flex: 1;
+    gap: 10px;
   }
 
-  .badge {
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 600;
-    background: rgba(56, 189, 248, 0.14);
-    color: #7dd3fc;
-    text-transform: none;
-    letter-spacing: 0;
-  }
-
-  label.field-label {
+  .modal-body {
+    padding: 14px 16px;
     display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: 5px;
+    flex-direction: column;
+    gap: 10px;
+    overflow: auto;
   }
-  input[type="text"], input[type="number"], textarea, select {
+
+  .modal-body p {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  #shareCodeBox {
     width: 100%;
-    background: var(--bg-input);
+    min-height: 260px;
+    background: #0b0e15;
+    color: #dde4f7;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-family: inherit;
-    font-size: 12.5px;
-    padding: 8px 10px;
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  input:focus, textarea:focus, select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
-  }
-  textarea {
-    resize: vertical;
-    min-height: 88px;
-    line-height: 1.48;
-  }
-
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 8px;
-  }
-  .chip {
-    font-size: 10.5px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    background: rgba(30, 41, 59, 0.72);
-    border: 1px solid var(--border);
-    color: #cbd5e1;
-    cursor: pointer;
-    transition: all 0.14s;
-  }
-  .chip:hover {
-    border-color: var(--accent);
-    color: #fff;
-    background: rgba(56, 189, 248, 0.15);
-  }
-
-  .dropzone {
-    border: 1.5px dashed rgba(56, 189, 248, 0.35);
-    background: rgba(15, 23, 42, 0.55);
-    border-radius: var(--radius-md);
+    border-radius: 8px;
     padding: 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.18s;
-    color: #93c5fd;
-    font-size: 12px;
-  }
-  .dropzone:hover, .dropzone.dragover {
-    border-color: var(--accent);
-    background: rgba(56, 189, 248, 0.1);
-    color: #fff;
-  }
-  .dropzone small {
-    display: block;
-    color: var(--text-muted);
-    font-size: 10.5px;
-    margin-top: 3px;
-  }
-
-  .tree-list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-top: 8px;
-  }
-  .tree-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 9px;
-    border-radius: var(--radius-sm);
-    background: rgba(15, 23, 42, 0.65);
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all 0.14s;
-  }
-  .tree-item:hover {
-    background: rgba(30, 41, 59, 0.85);
-    border-color: var(--border);
-  }
-  .tree-item.selected {
-    background: rgba(56, 189, 248, 0.14);
-    border-color: rgba(56, 189, 248, 0.45);
-  }
-  .tree-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-  .tree-dot.ref { background: #38bdf8; }
-  .tree-dot.gen { background: #818cf8; }
-  .tree-info { flex: 1; min-width: 0; }
-  .tree-name {
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .tree-meta {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--text-muted);
-  }
-  .tree-actions { display: flex; gap: 4px; }
-  .mini-btn {
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--text-secondary);
-    border-radius: 4px;
-    padding: 2px 5px;
-    font-size: 11px;
-    cursor: pointer;
-  }
-  .mini-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
-  }
-
-  .vec-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    margin-bottom: 10px;
-  }
-  .vec-cell {
-    display: flex;
-    align-items: center;
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 0 6px;
-  }
-  .vec-cell span {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    margin-right: 4px;
-  }
-  .vec-cell span.x { color: #f87171; }
-  .vec-cell span.y { color: #4ade80; }
-  .vec-cell span.z { color: #60a5fa; }
-  .vec-cell input {
-    border: none;
-    background: transparent;
-    padding: 5px 2px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    text-align: right;
-  }
-  .vec-cell input:focus { box-shadow: none; }
-
-  .viewport-toolbar {
-    position: fixed;
-    bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 18;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: var(--bg-panel);
-    backdrop-filter: blur(18px);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  }
-  .toolbar-divider {
-    width: 1px;
-    height: 18px;
-    background: var(--border);
-    margin: 0 2px;
-  }
-
-  .hud-telemetry {
-    position: fixed;
-    bottom: 64px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 14;
-    pointer-events: none;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--text-secondary);
-    background: rgba(6, 9, 14, 0.72);
-    padding: 4px 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    white-space: nowrap;
-  }
-
-  .empty-hero {
-    position: fixed;
-    top: 46%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 5;
-    text-align: center;
-    pointer-events: none;
-    max-width: 400px;
-    transition: opacity 0.25s ease;
-  }
-  .empty-hero.hidden { opacity: 0; }
-  .empty-hero h3 {
-    margin: 0 0 6px;
-    font-size: 18px;
-    font-weight: 600;
-    color: #e2e8f0;
-  }
-  .empty-hero p {
-    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 12.5px;
-    color: var(--text-muted);
     line-height: 1.5;
+    resize: vertical;
   }
 
-  .console-log {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    line-height: 1.55;
-    color: #94a3b8;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .console-log .ok { color: #34d399; }
-  .console-log .ai { color: #7dd3fc; }
-  .console-log .warn { color: #fbbf24; }
-
-  .toast-wrap {
-    position: fixed;
-    top: 72px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 60;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    pointer-events: none;
-  }
-  .toast {
-    background: rgba(15, 23, 42, 0.94);
-    border: 1px solid var(--border-bright);
-    color: #f8fafc;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-size: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    animation: fadeInDown 0.2s ease;
-  }
-  @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @media (max-width: 1024px) {
-    .dock-left { width: 290px; }
-    .dock-right { width: 260px; }
-  }
-  @media (max-width: 780px) {
-    html, body { overflow: auto; }
-    #viewport-container { position: relative; height: 55vh; }
-    .dock-left, .dock-right { position: static; width: 100%; pointer-events: auto; padding: 8px; }
-    .viewport-toolbar { position: static; transform: none; justify-content: center; margin: 8px; border-radius: 12px; }
-    .hud-telemetry, .empty-hero { display: none; }
+  @media (max-width: 860px) {
+    body {
+      height: auto;
+      min-height: 100vh;
+      overflow: auto;
+    }
+    .main {
+      grid-template-columns: 1fr;
+      grid-template-rows: 390px 440px;
+    }
+    .editor-pane {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
   }
 </style>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
-    "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.0/build/index.module.js",
-    "three-bvh-csg": "https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.16/build/index.module.js"
-  }
-}
-</script>
 </head>
 <body>
-
-  <div id="viewport-container"></div>
-
-  <div class="empty-hero" id="empty-hero">
-    <h3>Zero-Config Generative CAD Studio</h3>
-    <p>Type any mechanical part, mount, drone frame, gear, or hollowed enclosure—or drop reference <strong>.STL</strong> parts. Instant live AI + real Boolean CSG solids with zero API keys.</p>
-  </div>
-
-  <div class="toast-wrap" id="toasts"></div>
-
-  <header class="topbar">
+  <header>
     <div class="brand">
-      <div class="brand-icon">◈</div>
-      <span>AI <em>Build Lab</em></span>
+      <span>STL CAD Studio</span>
+      <span class="badge">v3 • Import &amp; Code</span>
     </div>
-    <div class="status-pill" id="ai-mode-pill">
-      <span class="status-dot" id="status-dot"></span>
-      <span id="ai-mode-label">Zero-Key AI + CSG Ready</span>
-    </div>
-    <div class="top-actions">
-      <button class="btn active" id="btn-ai-toggle" title="Toggle between Instant Keyless Cloud AI + Local CSG fallback">✦ AI Mode: Auto</button>
-      <button class="btn" id="btn-load-json">Import JSON</button>
-      <button class="btn" id="btn-save-json">Save JSON</button>
-      <button class="btn primary" id="btn-export-all">↓ Export Assembly STL</button>
-      <input type="file" id="input-json" accept=".json" hidden />
+    <div class="controls">
+      <input id="fileInput" type="file" accept=".stl,.obj" style="display: none;">
+      <button id="importBtn">Import STL/OBJ</button>
+      <button id="shareBtn" class="warn">Copy Model Code for AI</button>
+      <select id="presetSelect" title="Load a preset script">
+        <option value="mount_plate">Preset: Controller &amp; Sensor Mount</option>
+        <option value="use_imported">Preset: Modify Imported Model</option>
+        <option value="spacer_ring">Preset: Spacer &amp; Collar</option>
+      </select>
+      <button id="buildBtn" class="primary">Build (Ctrl+Enter)</button>
+      <input id="fileNameInput" type="text" value="custom_part" title="Export filename" style="width: 112px;">
+      <button id="exportBtn" class="success">Export .STL</button>
     </div>
   </header>
 
-  <aside class="dock-left">
-    <div class="card">
-      <div class="card-header">
-        <span>Generative Design Prompt</span>
-        <span class="badge" id="engine-badge">Zero-Key AI</span>
+  <div class="main">
+    <section class="editor-pane">
+      <div class="pane-bar">
+        <span>CAD Script (JS + Primitives + Imported Model Variable)</span>
+        <span>1 unit = 1 mm</span>
       </div>
-      <div class="card-body">
-        <label class="field-label">
-          <span>Hardware / Assembly Context</span>
-          <span style="color:var(--text-muted)">mm units</span>
-        </label>
-        <input type="text" id="product-context" placeholder="e.g. NEMA 17, 2207 Brushless, SG90, Arduino Mega" style="margin-bottom:9px" />
+      <div class="ref-bar">
+        Imported mesh: <code>imported</code> (use <code>hasImported</code> to check) •
+        Shapes: <code>box(w,h,d)</code> <code>cyl(rTop,rBot,h,seg)</code> <code>tube(rOut,rIn,h,seg)</code> <code>cone(r,h,seg)</code> <code>sphere(r,wSeg,hSeg)</code><br>
+        Xform &amp; CSG: <code>move(g,x,y,z)</code> / <code>translate(...)</code> <code>rot(g,rx,ry,rz)</code> / <code>rotate(...)</code> <code>scale(g,sx,sy,sz)</code> <code>add(...gs)</code> / <code>union(...)</code> <code>sub(base,...cuts)</code> <code>deg(d)</code>
+      </div>
+      <textarea id="codeEditor" spellcheck="false"></textarea>
+      <div class="status-bar">
+        <span id="statusText" class="status-ok">Ready</span>
+        <span id="statsText" style="color: var(--muted);">0 tris • 0×0×0 mm</span>
+      </div>
+    </section>
 
-        <label class="field-label">
-          <span>Describe What to Build</span>
-        </label>
-        <textarea id="prompt-input" placeholder="Describe any custom bracket, quadcopter frame, hollowed project box, servo horn, flange, or mate two imported STLs..."></textarea>
-
-        <div class="chips">
-          <button class="chip" data-preset="NEMA 17 L-bracket motor mount 52x52x46mm with 22mm shaft bore and 4 M3 bolt holes">NEMA 17 Mount</button>
-          <button class="chip" data-preset="Hollowed electronics enclosure 95x65x34mm with 3mm wall thickness and 4 M3 corner mounting holes">Hollow Box</button>
-          <button class="chip" data-preset="X-frame FPV drone chassis 140x140x4mm with 30.5x30.5mm M3 stack holes and 16mm motor mount holes">FPV X-Frame</button>
-          <button class="chip" data-preset="Servo mount bracket for SG90 with side ears and M2 mounting holes">SG90 Servo Mount</button>
-          <button class="chip" data-preset="Flanged shaft coupler 36mm outer diameter 28mm tall with 8mm center bore and M3 set screw hole">Shaft Flange</button>
-          <button class="chip" data-preset="Attach Motor to Base with 4mm wall and M4 bolt holes">Mate Ref A → B</button>
+    <section class="viewer-pane">
+      <div class="hud-top">
+        <button id="resetCamBtn">Reset View</button>
+        <button id="wireBtn">Wireframe</button>
+      </div>
+      <div id="canvasHost"></div>
+      <div class="hud-bottom">
+        <div class="hud-card">
+          Left-drag: Orbit • Right-drag: Pan • Scroll: Zoom • Drag &amp; drop .stl/.obj anywhere
         </div>
-
-        <div style="display:flex; gap:7px; margin-top:10px;">
-          <button class="btn primary" id="btn-generate" style="flex:1">✦ Build Part</button>
-          <button class="btn" id="btn-append-mode" title="Toggle Add vs Replace">Mode: Add</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="card grow">
-      <div class="card-header">
-        <span>Assembly Outliner</span>
-        <span class="badge" id="part-count-badge">0 parts</span>
-      </div>
-      <div class="card-body">
-        <div class="dropzone" id="stl-dropzone">
-          ＋ Drop <strong>.STL</strong> Reference Files Here
-          <small>Auto-centered · Millimetre scale · Rename to reference in prompts</small>
-        </div>
-        <input type="file" id="input-stl" accept=".stl" multiple hidden />
-        <div class="tree-list" id="scene-tree"></div>
-      </div>
-    </div>
-  </aside>
-
-  <aside class="dock-right">
-    <div class="card">
-      <div class="card-header">
-        <span>Part Inspector</span>
-        <span class="badge" id="selected-type-badge">None</span>
-      </div>
-      <div class="card-body" id="inspector-body">
-        <div style="color:var(--text-muted); font-size:12px; line-height:1.5;">
-          Click any mesh in the 3D viewport or outliner to inspect dimensions, transform with 3D gizmos, or export individually.
+        <div id="boundsCard" class="hud-card">
+          <strong>Bounds:</strong> —
         </div>
       </div>
-    </div>
-
-    <div class="card grow">
-      <div class="card-header">
-        <span>CAD &amp; AI Build Log</span>
-        <button class="mini-btn" id="btn-clear-gen">Clear Gen</button>
-      </div>
-      <div class="card-body">
-        <div class="console-log" id="build-log"></div>
-      </div>
-    </div>
-  </aside>
-
-  <div class="hud-telemetry" id="hud-telemetry">0 refs · 0 generated · Ready</div>
-
-  <div class="viewport-toolbar">
-    <button class="btn active" id="gizmo-translate" title="Move Gizmo (W)">✥ Move</button>
-    <button class="btn" id="gizmo-rotate" title="Rotate Gizmo (E)">↻ Rotate</button>
-    <div class="toolbar-divider"></div>
-    <button class="btn" id="btn-snap-grid" title="Snap selected part to 5mm grid">⊞ Snap 5mm</button>
-    <button class="btn" id="btn-fit-anim" title="Preview vertical mating fit">↕ Fit Test</button>
-    <button class="btn" id="btn-wireframe" title="Toggle wireframe overlay">❖ Wire</button>
-    <div class="toolbar-divider"></div>
-    <button class="btn" id="btn-fit-cam" title="Frame all objects (F)">⊡ Frame</button>
-    <button class="btn" id="btn-reset-cam" title="Reset camera angle">↺ Reset</button>
+    </section>
   </div>
 
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { STLLoader } from 'three/addons/loaders/STLLoader.js';
-import { STLExporter } from 'three/addons/exporters/STLExporter.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
+  <div id="shareModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-head">
+        <strong>Model Summary &amp; Code Snippet for Chat</strong>
+        <div style="display: flex; gap: 8px;">
+          <button id="copyShareBtn" class="primary">Copy to Clipboard</button>
+          <button id="closeShareBtn">Close</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <p>
+          Paste this into the chat so I can see the exact dimensions, bounds, and approximate block/primitive breakdown of your current or imported 3D model without needing raw binary STL bytes.
+        </p>
+        <textarea id="shareCodeBox" readonly=""></textarea>
+      </div>
+    </div>
+  </div>
 
-// ============================================================================
-// 1. STUDIO PBR SCENE & LIGHTING
-// ============================================================================
-const container = document.getElementById('viewport-container');
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x06090e);
-scene.fog = new THREE.FogExp2(0x06090e, 0.0014);
-
-const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.5, 5000);
-camera.position.set(165, 130, 195);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.18;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-container.appendChild(renderer.domElement);
-
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-
-scene.add(new THREE.HemisphereLight(0xdbeafe, 0x0f172a, 0.95));
-
-const keyLight = new THREE.DirectionalLight(0xffffff, 2.3);
-keyLight.position.set(140, 220, 150);
-keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(2048, 2048);
-keyLight.shadow.camera.near = 10;
-keyLight.shadow.camera.far = 800;
-const d = 180;
-keyLight.shadow.camera.left = -d;
-keyLight.shadow.camera.right = d;
-keyLight.shadow.camera.top = d;
-keyLight.shadow.camera.bottom = -d;
-keyLight.shadow.bias = -0.0005;
-scene.add(keyLight);
-
-const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.15);
-rimLight.position.set(-160, 90, -140);
-scene.add(rimLight);
-
-const groundPlane = new THREE.Mesh(
-  new THREE.PlaneGeometry(2000, 2000),
-  new THREE.ShadowMaterial({ opacity: 0.36 })
-);
-groundPlane.rotation.x = -Math.PI / 2;
-groundPlane.position.y = -0.02;
-groundPlane.receiveShadow = true;
-scene.add(groundPlane);
-
-scene.add(new THREE.GridHelper(400, 40, 0x334155, 0x1e293b));
-const gridMinor = new THREE.GridHelper(400, 200, 0x1e293b, 0x111827);
-gridMinor.position.y = -0.01;
-scene.add(gridMinor);
-
-const orbit = new OrbitControls(camera, renderer.domElement);
-orbit.enableDamping = true;
-orbit.dampingFactor = 0.06;
-orbit.target.set(0, 18, 0);
-
-const transform = new TransformControls(camera, renderer.domElement);
-transform.setSpace('world');
-transform.addEventListener('dragging-changed', (e) => { orbit.enabled = !e.value; });
-transform.addEventListener('objectChange', () => { if (state.selected) updateInspectorValues(); });
-scene.add(transform);
-
-// ============================================================================
-// 2. STATE & MATERIALS
-// ============================================================================
-const csgEvaluator = new Evaluator();
-csgEvaluator.useGroups = false;
-
-const MATERIALS = {
-  reference: new THREE.MeshPhysicalMaterial({
-    color: 0x64748b,
-    metalness: 0.58,
-    roughness: 0.34,
-    clearcoat: 0.22
-  }),
-  generated: new THREE.MeshPhysicalMaterial({
-    color: 0x2563eb,
-    metalness: 0.26,
-    roughness: 0.30,
-    clearcoat: 0.38
-  })
-};
-
-const state = {
-  refs: [],
-  generated: [],
-  selected: null,
-  appendMode: true,
-  wireframe: false,
-  aiMode: 'auto', // 'auto' (keyless AI -> instant fallback) | 'instant' (pure instant CSG)
-  fitAnim: null
-};
-
-const assemblyRoot = new THREE.Group();
-scene.add(assemblyRoot);
-const $ = (sel) => document.querySelector(sel);
-
-function toast(msg) {
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
-  $('#toasts').appendChild(el);
-  setTimeout(() => el.remove(), 2800);
-}
-
-function log(msg, cls = '') {
-  const box = $('#build-log');
-  const line = document.createElement('div');
-  if (cls) line.className = cls;
-  line.textContent = `› ${msg}`;
-  box.appendChild(line);
-  box.scrollTop = box.scrollHeight;
-}
-
-function setStatus(text, busy = false) {
-  $('#ai-mode-label').textContent = text;
-  $('#status-dot').classList.toggle('busy', busy);
-}
-
-// ============================================================================
-// 3. REAL BOOLEAN CSG ENGINE
-// ============================================================================
-function createEdgeLines(mesh) {
-  const edges = new THREE.EdgesGeometry(mesh.geometry, 28);
-  const line = new THREE.LineSegments(
-    edges,
-    new THREE.LineBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.25 })
-  );
-  line.name = '__edges__';
-  mesh.add(line);
-}
-
-function registerGeneratedMesh(geometry, name, pos = [0, 0, 0], rot = [0, 0, 0]) {
-  geometry.computeVertexNormals();
-  const mat = MATERIALS.generated.clone();
-  mat.wireframe = state.wireframe;
-  const mesh = new THREE.Mesh(geometry, mat);
-  mesh.name = name;
-  mesh.position.set(...pos);
-  mesh.rotation.set(
-    THREE.MathUtils.degToRad(rot[0] || 0),
-    THREE.MathUtils.degToRad(rot[1] || 0),
-    THREE.MathUtils.degToRad(rot[2] || 0)
-  );
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  mesh.userData = { kind: 'generated', baseColor: 0x2563eb };
-  createEdgeLines(mesh);
-  assemblyRoot.add(mesh);
-  state.generated.push(mesh);
-  return mesh;
-}
-
-function buildCSGPart(spec) {
-  if (!spec || !Array.isArray(spec.ops) || !spec.ops.length) return null;
-  let resultBrush = null;
-
-  for (const step of spec.ops) {
-    let geom;
-    const s = step.size || [20, 20, 20];
-    if (step.shape === 'cylinder') {
-      const rTop = Math.max(0.2, Number(s[0]) || 5);
-      const rBot = Math.max(0.2, Number(s[1]) ?? rTop);
-      const h = Math.max(0.5, Number(s[2]) || 20);
-      geom = new THREE.CylinderGeometry(rTop, rBot, h, 40);
-    } else {
-      geom = new THREE.BoxGeometry(
-        Math.max(0.5, Number(s[0]) || 20),
-        Math.max(0.5, Number(s[1]) || 20),
-        Math.max(0.5, Number(s[2]) || 20)
-      );
-    }
-
-    const brush = new Brush(geom, MATERIALS.generated);
-    const p = step.pos || [0, 0, 0];
-    const r = step.rot || [0, 0, 0];
-    brush.position.set(Number(p[0]) || 0, Number(p[1]) || 0, Number(p[2]) || 0);
-    brush.rotation.set(
-      THREE.MathUtils.degToRad(Number(r[0]) || 0),
-      THREE.MathUtils.degToRad(Number(r[1]) || 0),
-      THREE.MathUtils.degToRad(Number(r[2]) || 0)
-    );
-    brush.updateMatrixWorld();
-
-    if (!resultBrush) {
-      resultBrush = brush;
-    } else {
-      const mode = step.op === 'subtract' ? SUBTRACTION : ADDITION;
-      resultBrush = csgEvaluator.evaluate(resultBrush, brush, mode);
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
     }
   }
+  </script>
 
-  return registerGeneratedMesh(
-    resultBrush.geometry,
-    spec.name || 'CSG_Solid',
-    spec.position || [0, 0, 0],
-    spec.rotation || [0, 0, 0]
-  );
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+    import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+    import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+    let importedGeometry = null;
+    let importedFileName = '';
+
+    const PRESETS = {
+      mount_plate: `// Base plate + side rails + angled sensor cradle (mm)
+const baseW = 56;
+const baseD = 38;
+const baseT = 3.0;
+
+const basePlate = move(box(baseW, baseT, baseD), 0, baseT / 2, 0);
+const leftRail  = move(box(baseW, 8, 2.4), 0, baseT + 4, -baseD / 2 + 1.2);
+const rightRail = move(box(baseW, 8, 2.4), 0, baseT + 4,  baseD / 2 - 1.2);
+
+const tilt = deg(-8);
+const sensorPad  = move(rot(box(20, 3.0, 22), tilt, 0, 0), 8, baseT + 4.5, 0);
+const cheekLeft  = move(rot(box(20, 7.0, 2.2), tilt, 0, 0), 8, baseT + 6.5, -11);
+const cheekRight = move(rot(box(20, 7.0, 2.2), tilt, 0, 0), 8, baseT + 6.5,  11);
+
+const solid = add(basePlate, leftRail, rightRail, sensorPad, cheekLeft, cheekRight);
+const hole1 = move(cyl(1.5, 1.5, 10, 24), -22, 2, -13);
+const hole2 = move(cyl(1.5, 1.5, 10, 24), -22, 2,  13);
+const hole3 = move(cyl(1.5, 1.5, 10, 24),  22, 2, -13);
+const hole4 = move(cyl(1.5, 1.5, 10, 24),  22, 2,  13);
+
+return sub(solid, hole1, hole2, hole3, hole4);`,
+
+      use_imported: `// Uses your imported STL/OBJ ("imported") if one is loaded,
+// otherwise falls back to a starter block so Build always works.
+if (!hasImported) {
+  return move(box(40, 10, 30), 0, 5, 0);
 }
 
-// ============================================================================
-// 4. ZERO-KEY CLOUD AI SYNTHESIZER (NO API KEY, NO SIGNUP)
-// ============================================================================
-const CAD_SYSTEM_PROMPT = `You are a mechanical CAD geometry compiler outputting Constructive Solid Geometry (CSG) JSON in millimetres (Y is UP, ground is Y=0).
-Output ONLY valid raw JSON (no markdown, no explanation outside JSON):
-{"summary":"short note","parts":[{"name":"Part_Name","position":[0,0,0],"rotation":[0,0,0],"ops":[{"op":"add","shape":"box","size":[w,h,d],"pos":[x,y,z],"rot":[rx,ry,rz]},{"op":"subtract","shape":"cylinder","size":[rTop,rBot,len],"pos":[x,y,z],"rot":[rx,ry,rz]}]}]}
-Rules: First op must be "add". Subtract cylinders must be 4mm longer than wall thickness. Cylinders default along Y axis (rotate [90,0,0] for Z-axis holes). Keep parts resting on Y>=0.`;
+// Example: sit the imported model cleanly on y = 0 and add a base riser
+const baseRiser = move(box(50, 3, 50), 0, 1.5, 0);
+const onDeck = move(imported, 0, 3, 0);
+return add(baseRiser, onDeck);`,
 
-function getBBox(obj) {
-  const box = new THREE.Box3().setFromObject(obj);
-  return {
-    box,
-    size: box.getSize(new THREE.Vector3()),
-    center: box.getCenter(new THREE.Vector3())
-  };
-}
+      spacer_ring: `// Stepped collar / standoff ring (mm)
+const outer = move(tube(14, 6, 10, 40), 0, 5, 0);
+const lip = move(tube(18, 12, 3, 40), 0, 1.5, 0);
+return add(outer, lip);`
+    };
 
-async function queryZeroKeyAI(promptText) {
-  const refContext = state.refs.map(r => {
-    const b = getBBox(r.mesh);
-    return `${r.name}: ${b.size.x.toFixed(1)}x${b.size.y.toFixed(1)}x${b.size.z.toFixed(1)}mm at [${b.center.x.toFixed(1)},${b.center.y.toFixed(1)},${b.center.z.toFixed(1)}]`;
-  }).join('; ') || 'none';
-
-  const product = $('#product-context').value.trim();
-  const fullPrompt = `${CAD_SYSTEM_PROMPT}\n\nHardware context: ${product || 'general'}\nReference STLs: ${refContext}\nBuild request: ${promptText}`;
-
-  // Race free keyless CORS-enabled endpoints with a tight 5.5s timeout so it feels snappy
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5500);
-
-  try {
-    // Endpoint A: Pollinations keyless text endpoint
-    const url = `https://text.pollinations.ai/${encodeURIComponent(fullPrompt)}?json=true&seed=${Math.floor(Math.random() * 99999)}`;
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Non-JSON AI reply');
-    const parsed = JSON.parse(jsonMatch[0]);
-    if (!Array.isArray(parsed.parts) || !parsed.parts.length) throw new Error('Empty parts array');
-    return parsed;
-  } catch (err) {
-    clearTimeout(timer);
-    throw err;
-  }
-}
-
-// ============================================================================
-// 5. INSTANT OFFLINE PARAMETRIC + CSG SOLID SYNTHESIZER (0ms LATENCY)
-// ============================================================================
-function synthesizeInstantCSG(promptText) {
-  const low = promptText.toLowerCase();
-  const specs = [];
-  const notes = [];
-
-  let dims = null;
-  const dm = low.match(/(\d+(?:\.\d+)?)\s*(?:x|×|\*)\s*(\d+(?:\.\d+)?)\s*(?:x|×|\*)\s*(\d+(?:\.\d+)?)/i);
-  if (dm) dims = [parseFloat(dm[1]), parseFloat(dm[2]), parseFloat(dm[3])];
-
-  const boltM = parseFloat(low.match(/\bm(\d+(?:\.\d+)?)/i)?.[1] || 0);
-  const holeR = boltM > 0 ? (boltM + 0.4) / 2 : 0;
-  const wall = parseFloat(low.match(/wall(?:\s*thickness)?\s*(\d+(?:\.\d+)?)/i)?.[1] || 4);
-
-  // 1. Mate / Attach Named References
-  const rel = low.match(/(?:mount|attach|connect|mate|join|bridge)\s+(.+?)\s+(?:to|onto|on|with)\s+(.+?)(?:\s+(?:with|using|and|$))/i);
-  if (rel && state.refs.length >= 2) {
-    const refA = state.refs.find(r => rel[1].toLowerCase().includes(r.name.toLowerCase()));
-    const refB = state.refs.find(r => r !== refA && rel[2].toLowerCase().includes(r.name.toLowerCase()));
-    if (refA && refB) {
-      const A = getBBox(refA.mesh);
-      const B = getBBox(refB.mesh);
-      const w = Math.max(A.size.x, B.size.x) + wall * 2 + 6;
-      const d = Math.max(A.size.z, B.size.z) + wall * 2 + 6;
-      const h = Math.max(18, A.size.y * 0.65);
-      const r = holeR || 2.2;
-      const mid = A.center.clone().add(B.center).multiplyScalar(0.5);
-      const baseY = Math.min(A.box.min.y, B.box.min.y);
-
-      const ops = [
-        { op: 'add', shape: 'box', size: [w, wall, d], pos: [0, wall / 2, 0] },
-        { op: 'add', shape: 'box', size: [wall, h, d], pos: [-w / 2 + wall / 2, wall + h / 2, 0] },
-        { op: 'add', shape: 'box', size: [wall, h, d], pos: [w / 2 - wall / 2, wall + h / 2, 0] }
-      ];
-      for (const sx of [-1, 1]) {
-        for (const sz of [-1, 1]) {
-          ops.push({
-            op: 'subtract',
-            shape: 'cylinder',
-            size: [r, r, wall + 6],
-            pos: [sx * (w / 2 - wall * 1.8), wall / 2, sz * (d / 2 - wall * 1.8)]
-          });
+    function normalizeGeometry(geom) {
+      const g = geom.index ? geom.toNonIndexed() : geom.clone();
+      if (!g.getAttribute('normal')) {
+        g.computeVertexNormals();
+      }
+      for (const key of Object.keys(g.attributes)) {
+        if (key !== 'position' && key !== 'normal') {
+          g.deleteAttribute(key);
         }
       }
-      specs.push({ name: `Adapter_${refA.name}_to_${refB.name}`, position: [mid.x, baseY, mid.z], ops });
-      notes.push(`Synthesized CSG adapter bridging "${refA.name}" & "${refB.name}" (${w.toFixed(1)}×${d.toFixed(1)}mm) with 4 through-holes.`);
-      return { specs, notes };
+      return g;
     }
-  }
 
-  // 2. FPV Quadcopter / Drone X-Frame
-  if (/\b(drone|quad|fpv|x-frame|chassis)\b/.test(low)) {
-    const [spanW, spanD, thick] = dims || [140, 140, 4];
-    const armLen = Math.hypot(spanW, spanD) * 0.92;
-    const armW = 14;
-    const ops = [
-      { op: 'add', shape: 'box', size: [armLen, thick, armW], pos: [0, thick / 2, 0], rot: [0, 45, 0] },
-      { op: 'add', shape: 'box', size: [armLen, thick, armW], pos: [0, thick / 2, 0], rot: [0, -45, 0] },
-      { op: 'add', shape: 'box', size: [44, thick, 44], pos: [0, thick / 2, 0] }
-    ];
-    // 30.5x30.5mm FC stack holes
-    for (const sx of [-1, 1]) {
-      for (const sz of [-1, 1]) {
-        ops.push({ op: 'subtract', shape: 'cylinder', size: [1.7, 1.7, thick + 6], pos: [sx * 15.25, thick / 2, sz * 15.25] });
+    function getTriangles(geom) {
+      const g = normalizeGeometry(geom);
+      const pos = g.getAttribute('position');
+      const tris = [];
+      for (let i = 0; i < pos.count; i += 3) {
+        tris.push([
+          new THREE.Vector3().fromBufferAttribute(pos, i),
+          new THREE.Vector3().fromBufferAttribute(pos, i + 1),
+          new THREE.Vector3().fromBufferAttribute(pos, i + 2)
+        ]);
       }
+      return tris;
     }
-    // Motor pod ends + shaft/mounting holes
-    const podDist = (armLen / 2 - 10) * Math.SQRT1_2;
-    for (const sx of [-1, 1]) {
-      for (const sz of [-1, 1]) {
-        ops.push({ op: 'add', shape: 'cylinder', size: [11, 11, thick], pos: [sx * podDist, thick / 2, sz * podDist] });
-        ops.push({ op: 'subtract', shape: 'cylinder', size: [3.2, 3.2, thick + 6], pos: [sx * podDist, thick / 2, sz * podDist] });
+
+    function trianglesToGeometry(tris) {
+      const positions = new Float32Array(tris.length * 9);
+      let idx = 0;
+      for (const [a, b, c] of tris) {
+        positions[idx++] = a.x; positions[idx++] = a.y; positions[idx++] = a.z;
+        positions[idx++] = b.x; positions[idx++] = b.y; positions[idx++] = b.z;
+        positions[idx++] = c.x; positions[idx++] = c.y; positions[idx++] = c.z;
       }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      g.computeVertexNormals();
+      return g;
     }
-    specs.push({ name: `FPV_XFrame_${spanW}mm`, position: [0, 0, 0], ops });
-    notes.push(`Generated ${spanW}×${spanD}mm FPV X-Frame (${thick}mm plate) with 30.5×30.5mm M3 stack pattern & 4 motor pods.`);
-    return { specs, notes };
-  }
 
-  // 3. Flanged Shaft Coupler / Wheel Hub / Spacer Ring
-  if (/\b(flange|coupler|hub|pulley|ring|spacer|wheel)\b/.test(low)) {
-    const outerD = parseFloat(low.match(/(\d+(?:\.\d+)?)\s*mm\s*(?:outer|od|diameter)/i)?.[1] || 36);
-    const height = parseFloat(low.match(/(\d+(?:\.\d+)?)\s*mm\s*(?:tall|height|high)/i)?.[1] || 26);
-    const boreD = parseFloat(low.match(/(\d+(?:\.\d+)?)\s*mm\s*(?:center\s*)?(?:bore|inner|id|hole)/i)?.[1] || 8);
-    const flangeH = Math.min(5, height * 0.25);
-    const bossR = outerD * 0.32;
-    const ops = [
-      { op: 'add', shape: 'cylinder', size: [outerD / 2, outerD / 2, flangeH], pos: [0, flangeH / 2, 0] },
-      { op: 'add', shape: 'cylinder', size: [bossR, bossR, height], pos: [0, height / 2, 0] },
-      { op: 'subtract', shape: 'cylinder', size: [boreD / 2, boreD / 2, height + 8], pos: [0, height / 2, 0] }
-    ];
-    // 4 flange bolt holes
-    const boltCircleR = (outerD / 2 + bossR) / 2;
-    const r = holeR || 1.7;
-    for (let i = 0; i < 4; i++) {
-      const ang = (i * Math.PI) / 2;
-      ops.push({
-        op: 'subtract',
-        shape: 'cylinder',
-        size: [r, r, flangeH + 6],
-        pos: [Math.cos(ang) * boltCircleR, flangeH / 2, Math.sin(ang) * boltCircleR]
-      });
+    function splitTriangleByPlane(tri, normal, planeDist, eps = 1e-5) {
+      const [a, b, c] = tri;
+      const pts = [a, b, c];
+      const dists = pts.map(p => normal.dot(p) - planeDist);
+      const sides = dists.map(d => (d > eps ? 1 : d < -eps ? -1 : 0));
+
+      const front = [];
+      const back = [];
+
+      if (sides.every(s => s >= 0)) {
+        front.push([a.clone(), b.clone(), c.clone()]);
+        return { front, back };
+      }
+      if (sides.every(s => s <= 0)) {
+        back.push([a.clone(), b.clone(), c.clone()]);
+        return { front, back };
+      }
+
+      const poly = [a, b, c];
+      const clipSide = (pList, keepPositive) => {
+        const out = [];
+        for (let i = 0; i < pList.length; i++) {
+          const cur = pList[i];
+          const nxt = pList[(i + 1) % pList.length];
+          const dCur = normal.dot(cur) - planeDist;
+          const dNxt = normal.dot(nxt) - planeDist;
+          const inCur = keepPositive ? dCur >= -eps : dCur <= eps;
+          const inNxt = keepPositive ? dNxt >= -eps : dNxt <= eps;
+
+          if (inCur && inNxt) {
+            out.push(nxt.clone());
+          } else if (inCur && !inNxt) {
+            const t = dCur / (dCur - dNxt);
+            out.push(cur.clone().lerp(nxt, THREE.MathUtils.clamp(t, 0, 1)));
+          } else if (!inCur && inNxt) {
+            const t = dCur / (dCur - dNxt);
+            out.push(cur.clone().lerp(nxt, THREE.MathUtils.clamp(t, 0, 1)));
+            out.push(nxt.clone());
+          }
+        }
+        const outTris = [];
+        for (let i = 1; i < out.length - 1; i++) {
+          if (out[0].distanceToSquared(out[i]) > 1e-10 &&
+              out[i].distanceToSquared(out[i + 1]) > 1e-10 &&
+              out[0].distanceToSquared(out[i + 1]) > 1e-10) {
+            outTris.push([out[0].clone(), out[i].clone(), out[i + 1].clone()]);
+          }
+        }
+        return outTris;
+      };
+
+      front.push(...clipSide(poly, true));
+      back.push(...clipSide(poly, false));
+      return { front, back };
     }
-    specs.push({ name: `Flange_Coupler_OD${outerD}_ID${boreD}`, position: [0, 0, 0], ops });
-    notes.push(`Built Ø${outerD}mm flanged coupler (${height}mm tall) with Ø${boreD}mm center bore & 4 bolt holes.`);
-    return { specs, notes };
-  }
 
-  // 4. Hollowed Enclosure / Project Box
-  if (/\b(enclosure|case|box|housing)\b/.test(low)) {
-    const [w, d, h] = dims || [95, 65, 34];
-    const t = Math.min(wall, w / 4, d / 4, h / 2);
-    const ops = [
-      { op: 'add', shape: 'box', size: [w, h, d], pos: [0, h / 2, 0] },
-      { op: 'subtract', shape: 'box', size: [w - t * 2, h - t + 2, d - t * 2], pos: [0, t + (h - t) / 2 + 1, 0] }
-    ];
-    if (holeR > 0) {
-      for (const sx of [-1, 1]) {
-        for (const sz of [-1, 1]) {
-          ops.push({
-            op: 'subtract',
-            shape: 'cylinder',
-            size: [holeR, holeR, t + 6],
-            pos: [sx * (w / 2 - t - holeR * 2.2), t / 2, sz * (d / 2 - t - holeR * 2.2)]
-          });
+    function extractConvexPlanes(cutterGeom) {
+      const tris = getTriangles(cutterGeom);
+      const planes = [];
+      const ab = new THREE.Vector3();
+      const ac = new THREE.Vector3();
+      const n = new THREE.Vector3();
+
+      for (const [a, b, c] of tris) {
+        ab.subVectors(b, a);
+        ac.subVectors(c, a);
+        n.crossVectors(ab, ac);
+        const len = n.length();
+        if (len < 1e-6) continue;
+        n.divideScalar(len);
+        const d = n.dot(a);
+
+        let merged = false;
+        for (const p of planes) {
+          if (p.normal.dot(n) > 0.9995 && Math.abs(p.dist - d) < 1e-3) {
+            merged = true;
+            break;
+          }
+        }
+        if (!merged) {
+          planes.push({ normal: n.clone(), dist: d });
         }
       }
+
+      const center = new THREE.Vector3();
+      for (const [a, b, c] of tris) {
+        center.add(a).add(b).add(c);
+      }
+      if (tris.length > 0) center.divideScalar(tris.length * 3);
+
+      for (const p of planes) {
+        if (p.normal.dot(center) - p.dist > 0) {
+          p.normal.negate();
+          p.dist = -p.dist;
+        }
+      }
+      return planes;
     }
-    specs.push({ name: `Enclosure_${w}x${d}x${h}`, position: [0, 0, 0], ops });
-    notes.push(`Constructed hollowed enclosure ${w}×${d}×${h}mm (${t}mm wall)${holeR ? ` with 4× M${boltM} corner holes` : ''}.`);
-    return { specs, notes };
-  }
 
-  // 5. Servo Mount (SG90 / MG996R)
-  if (/\b(servo|sg90|mg996)\b/.test(low)) {
-    const isMicro = /sg90/.test(low) || !/mg996/.test(low);
-    const bodyW = isMicro ? 23.2 : 41;
-    const bodyD = isMicro ? 12.6 : 20.5;
-    const h = isMicro ? 24 : 36;
-    const w = bodyW + 16;
-    const d = bodyD + 10;
-    const t = 4;
-    const r = holeR || (isMicro ? 1.2 : 2.1);
+    function pointInsidePlanes(pt, planes, eps = 1e-4) {
+      for (const p of planes) {
+        if (p.normal.dot(pt) - p.dist > eps) return false;
+      }
+      return true;
+    }
 
-    const ops = [
-      { op: 'add', shape: 'box', size: [w, t, d], pos: [0, t / 2, 0] },
-      { op: 'add', shape: 'box', size: [w, h, t], pos: [0, h / 2, -d / 2 + t / 2] },
-      { op: 'subtract', shape: 'box', size: [bodyW, h - 6, t + 6], pos: [0, h / 2 + 1, -d / 2 + t / 2] },
-      { op: 'subtract', shape: 'cylinder', size: [r, r, t + 6], pos: [-(bodyW / 2 + 4), h / 2 + 1, -d / 2 + t / 2], rot: [90, 0, 0] },
-      { op: 'subtract', shape: 'cylinder', size: [r, r, t + 6], pos: [bodyW / 2 + 4, h / 2 + 1, -d / 2 + t / 2], rot: [90, 0, 0] },
-      { op: 'subtract', shape: 'cylinder', size: [1.8, 1.8, t + 6], pos: [-w / 2 + 5, t / 2, 2] },
-      { op: 'subtract', shape: 'cylinder', size: [1.8, 1.8, t + 6], pos: [w / 2 - 5, t / 2, 2] }
-    ];
-    specs.push({ name: isMicro ? 'SG90_Servo_Bracket' : 'MG996_Servo_Bracket', position: [0, 0, 0], ops });
-    notes.push(`Generated ${isMicro ? 'SG90 micro' : 'MG996R standard'} servo cutout bracket with ear & base mounting holes.`);
-    return { specs, notes };
-  }
+    function subtractConvexCutter(baseTris, cutterGeom) {
+      const planes = extractConvexPlanes(cutterGeom);
+      if (planes.length === 0) return baseTris;
 
-  // 6. Motor / NEMA / L-Bracket Mount
-  if (/\b(motor|nema|bracket|l-bracket|mount|holder)\b/.test(low)) {
-    const isNema17 = /nema\s*17/.test(low);
-    const [w, d, h] = dims || (isNema17 ? [52, 52, 46] : [50, 48, 40]);
-    const t = wall;
-    const shaftD = parseFloat(low.match(/(\d+(?:\.\d+)?)\s*mm\s*(?:center\s*)?shaft/i)?.[1] || (isNema17 ? 22.5 : 14));
-    const holePitch = isNema17 ? 31 : Math.min(w, h) * 0.58;
-    const r = holeR || (isNema17 ? 1.7 : 2.1);
+      const box = new THREE.Box3().setFromBufferAttribute(normalizeGeometry(cutterGeom).getAttribute('position'));
+      const kept = [];
+      const centroid = new THREE.Vector3();
 
-    const ops = [
-      { op: 'add', shape: 'box', size: [w, t, d], pos: [0, t / 2, 0] },
-      { op: 'add', shape: 'box', size: [w, h, t], pos: [0, h / 2, -d / 2 + t / 2] },
-      { op: 'add', shape: 'box', size: [t, h * 0.72, d * 0.65], pos: [-w / 2 + t / 2, (h * 0.72) / 2, -d * 0.175] },
-      { op: 'add', shape: 'box', size: [t, h * 0.72, d * 0.65], pos: [w / 2 - t / 2, (h * 0.72) / 2, -d * 0.175] },
-      { op: 'subtract', shape: 'cylinder', size: [shaftD / 2, shaftD / 2, t + 10], pos: [0, h * 0.54, -d / 2 + t / 2], rot: [90, 0, 0] }
-    ];
+      for (const tri of baseTris) {
+        const triBox = new THREE.Box3().setFromPoints(tri);
+        if (!triBox.intersectsBox(box)) {
+          kept.push(tri);
+          continue;
+        }
 
-    for (const sx of [-1, 1]) {
-      for (const sy of [-1, 1]) {
-        ops.push({
-          op: 'subtract',
-          shape: 'cylinder',
-          size: [r, r, t + 10],
-          pos: [sx * (holePitch / 2), h * 0.54 + sy * (holePitch / 2), -d / 2 + t / 2],
-          rot: [90, 0, 0]
+        let outsidePieces = [tri];
+        for (const p of planes) {
+          const nextOutside = [];
+          for (const piece of outsidePieces) {
+            const split = splitTriangleByPlane(piece, p.normal, p.dist);
+            nextOutside.push(...split.front);
+          }
+          outsidePieces = nextOutside;
+        }
+
+        for (const piece of outsidePieces) {
+          centroid.copy(piece[0]).add(piece[1]).add(piece[2]).divideScalar(3);
+          if (!pointInsidePlanes(centroid, planes, -1e-4)) {
+            kept.push(piece);
+          }
+        }
+      }
+
+      return kept;
+    }
+
+    const CAD = {
+      deg: (d) => (d * Math.PI) / 180,
+      box: (w = 20, h = 20, d = 20) => normalizeGeometry(new THREE.BoxGeometry(w, h, d)),
+      cyl: (rTop = 10, rBot = 10, h = 20, segs = 36) =>
+        normalizeGeometry(new THREE.CylinderGeometry(rTop, rBot, h, segs, 1, false)),
+      tube: (rOut = 12, rIn = 8, h = 10, segs = 36) => {
+        const shape = new THREE.Shape();
+        shape.absarc(0, 0, rOut, 0, Math.PI * 2, false);
+        const hole = new THREE.Path();
+        hole.absarc(0, 0, Math.max(0.1, rIn), 0, Math.PI * 2, true);
+        shape.holes.push(hole);
+        const g = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false, curveSegments: segs });
+        g.rotateX(-Math.PI / 2);
+        g.translate(0, -h / 2, 0);
+        return normalizeGeometry(g);
+      },
+      cone: (r = 10, h = 20, segs = 36) => normalizeGeometry(new THREE.ConeGeometry(r, h, segs, 1, false)),
+      sphere: (r = 12, wSegs = 28, hSegs = 20) =>
+        normalizeGeometry(new THREE.SphereGeometry(r, wSegs, hSegs)),
+      move: (geom, x = 0, y = 0, z = 0) => {
+        const g = normalizeGeometry(geom);
+        g.translate(x, y, z);
+        return g;
+      },
+      rot: (geom, rx = 0, ry = 0, rz = 0) => {
+        const g = normalizeGeometry(geom);
+        g.rotateX(rx);
+        g.rotateY(ry);
+        g.rotateZ(rz);
+        return g;
+      },
+      scale: (geom, sx = 1, sy = 1, sz = 1) => {
+        const g = normalizeGeometry(geom);
+        g.scale(sx, sy, sz);
+        return g;
+      },
+      add: (...geoms) => {
+        const list = geoms.flat(Infinity).filter(Boolean).map(normalizeGeometry);
+        if (list.length === 0) throw new Error('add() / union() requires at least one geometry.');
+        const merged = mergeGeometries(list, false);
+        if (!merged) throw new Error('Failed to combine geometries.');
+        merged.computeVertexNormals();
+        return merged;
+      },
+      sub: (baseGeom, ...cutters) => {
+        let tris = getTriangles(baseGeom);
+        const flatCuts = cutters.flat(Infinity).filter(Boolean);
+        for (const cut of flatCuts) {
+          tris = subtractConvexCutter(tris, cut);
+        }
+        return trianglesToGeometry(tris);
+      }
+    };
+
+    // --- Viewport Setup ---
+    const host = document.getElementById('canvasHost');
+    const scene = new THREE.Scene();
+
+    const defaultCamPos = new THREE.Vector3(78, 64, 88);
+    const camera = new THREE.PerspectiveCamera(45, host.clientWidth / host.clientHeight, 0.1, 3000);
+    camera.position.copy(defaultCamPos);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(host.clientWidth, host.clientHeight);
+    host.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+
+    scene.add(new THREE.AmbientLight(0xdce6ff, 0.75));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.25);
+    keyLight.position.set(100, 150, 110);
+    scene.add(keyLight);
+    const rimLight = new THREE.DirectionalLight(0x88b4ff, 0.55);
+    rimLight.position.set(-90, -40, -80);
+    scene.add(rimLight);
+
+    scene.add(new THREE.GridHelper(200, 20, 0x3f4b6b, 0x202738));
+    scene.add(new THREE.AxesHelper(24));
+
+    const partMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4f8cff,
+      roughness: 0.36,
+      metalness: 0.12,
+      wireframe: false
+    });
+
+    let currentMesh = null;
+    let currentGeometry = null;
+
+    function geometryToBinarySTL(geometry, label = 'STL CAD Studio v3') {
+      const nonIndexed = geometry.index ? geometry.toNonIndexed() : geometry;
+      const pos = nonIndexed.getAttribute('position');
+      const triangleCount = Math.floor(pos.count / 3);
+      const bufferLength = 84 + triangleCount * 50;
+      const arrayBuffer = new ArrayBuffer(bufferLength);
+      const view = new DataView(arrayBuffer);
+
+      for (let i = 0; i < 80; i++) {
+        view.setUint8(i, i < label.length ? label.charCodeAt(i) : 32);
+      }
+      view.setUint32(80, triangleCount, true);
+
+      const vA = new THREE.Vector3();
+      const vB = new THREE.Vector3();
+      const vC = new THREE.Vector3();
+      const cb = new THREE.Vector3();
+      const ab = new THREE.Vector3();
+
+      let offset = 84;
+      for (let i = 0; i < triangleCount; i++) {
+        const i3 = i * 3;
+        vA.fromBufferAttribute(pos, i3);
+        vB.fromBufferAttribute(pos, i3 + 1);
+        vC.fromBufferAttribute(pos, i3 + 2);
+
+        cb.subVectors(vC, vB);
+        ab.subVectors(vA, vB);
+        cb.cross(ab).normalize();
+
+        view.setFloat32(offset, cb.x, true); offset += 4;
+        view.setFloat32(offset, cb.y, true); offset += 4;
+        view.setFloat32(offset, cb.z, true); offset += 4;
+
+        view.setFloat32(offset, vA.x, true); offset += 4;
+        view.setFloat32(offset, vA.y, true); offset += 4;
+        view.setFloat32(offset, vA.z, true); offset += 4;
+
+        view.setFloat32(offset, vB.x, true); offset += 4;
+        view.setFloat32(offset, vB.y, true); offset += 4;
+        view.setFloat32(offset, vB.z, true); offset += 4;
+
+        view.setFloat32(offset, vC.x, true); offset += 4;
+        view.setFloat32(offset, vC.y, true); offset += 4;
+        view.setFloat32(offset, vC.z, true); offset += 4;
+
+        view.setUint16(offset, 0, true); offset += 2;
+      }
+
+      return new Blob([arrayBuffer], { type: 'application/octet-stream' });
+    }
+
+    const editor = document.getElementById('codeEditor');
+    const statusText = document.getElementById('statusText');
+    const statsText = document.getElementById('statsText');
+    const boundsCard = document.getElementById('boundsCard');
+    const presetSelect = document.getElementById('presetSelect');
+    const fileNameInput = document.getElementById('fileNameInput');
+    const fileInput = document.getElementById('fileInput');
+
+    function setStatus(msg, ok = true) {
+      statusText.textContent = msg;
+      statusText.className = ok ? 'status-ok' : 'status-err';
+    }
+
+    function updateMetrics(geom) {
+      const pos = geom.getAttribute('position');
+      const triCount = Math.floor(pos.count / 3);
+      const box = new THREE.Box3().setFromBufferAttribute(pos);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+
+      const w = size.x.toFixed(1);
+      const h = size.y.toFixed(1);
+      const d = size.z.toFixed(1);
+
+      statsText.textContent = `${triCount.toLocaleString()} tris • ${w}×${h}×${d} mm`;
+      boundsCard.innerHTML =
+        `<strong>Size (W×H×D):</strong> ${w} × ${h} × ${d} mm<br/>` +
+        `<strong>X:</strong> [${box.min.x.toFixed(1)}, ${box.max.x.toFixed(1)}] ` +
+        `<strong>Y:</strong> [${box.min.y.toFixed(1)}, ${box.max.y.toFixed(1)}] ` +
+        `<strong>Z:</strong> [${box.min.z.toFixed(1)}, ${box.max.z.toFixed(1)}]`;
+    }
+
+    function displayGeometry(geom, label = 'Built & verified') {
+      const normalized = normalizeGeometry(geom);
+      const triCount = Math.floor(normalized.getAttribute('position').count / 3);
+      if (triCount === 0) {
+        throw new Error('Resulting mesh has 0 triangles.');
+      }
+      if (currentMesh) {
+        scene.remove(currentMesh);
+        currentMesh.geometry.dispose();
+      }
+      currentGeometry = normalized;
+      currentMesh = new THREE.Mesh(currentGeometry, partMaterial);
+      scene.add(currentMesh);
+      updateMetrics(currentGeometry);
+      setStatus(label, true);
+    }
+
+    function buildModel() {
+      try {
+        const fn = new Function(
+          'box', 'cyl', 'tube', 'cone', 'sphere',
+          'move', 'rot', 'scale', 'add', 'sub',
+          'translate', 'rotate', 'union',
+          'deg', 'imported', 'hasImported', 'THREE',
+          editor.value
+        );
+
+        const result = fn(
+          CAD.box, CAD.cyl, CAD.tube, CAD.cone, CAD.sphere,
+          CAD.move, CAD.rot, CAD.scale, CAD.add, CAD.sub,
+          CAD.move, CAD.rot, CAD.add,
+          CAD.deg,
+          importedGeometry ? normalizeGeometry(importedGeometry) : null,
+          Boolean(importedGeometry),
+          THREE
+        );
+
+        if (!(result instanceof THREE.BufferGeometry)) {
+          throw new Error('Script must return a geometry (e.g. "return add(...)" or "return imported").');
+        }
+
+        displayGeometry(result, 'Built & verified');
+      } catch (err) {
+        setStatus(err && err.message ? err.message : String(err), false);
+      }
+    }
+
+    function handleImportedBuffer(arrayBuffer, fileName) {
+      const lower = fileName.toLowerCase();
+      let geom = null;
+
+      if (lower.endsWith('.stl')) {
+        const loader = new STLLoader();
+        geom = loader.parse(arrayBuffer);
+      } else if (lower.endsWith('.obj')) {
+        const text = new TextDecoder().decode(arrayBuffer);
+        const loader = new OBJLoader();
+        const group = loader.parse(text);
+        const parts = [];
+        group.traverse((child) => {
+          if (child.isMesh && child.geometry) {
+            parts.push(normalizeGeometry(child.geometry));
+          }
         });
+        if (parts.length === 0) throw new Error('No mesh triangles found in OBJ file.');
+        geom = mergeGeometries(parts, false);
+      } else {
+        throw new Error('Unsupported file type. Please choose a .stl or .obj file.');
       }
+
+      importedGeometry = normalizeGeometry(geom);
+      importedFileName = fileName;
+      const cleanStem = fileName.replace(/\.(stl|obj)$/i, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      if (cleanStem) fileNameInput.value = cleanStem;
+
+      displayGeometry(importedGeometry, `Imported ${fileName}`);
     }
-    for (const sx of [-1, 1]) {
-      for (const sz of [-1, 1]) {
-        ops.push({
-          op: 'subtract',
-          shape: 'cylinder',
-          size: [r + 0.3, r + 0.3, t + 8],
-          pos: [sx * (w / 2 - t - 5), t / 2, sz * (d / 2 - t - 6) + 4]
-        });
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        const buf = await file.arrayBuffer();
+        handleImportedBuffer(buf, file.name);
+      } catch (err) {
+        setStatus(err && err.message ? err.message : String(err), false);
       }
-    }
+      fileInput.value = '';
+    });
 
-    specs.push({ name: isNema17 ? 'NEMA17_Bracket_CSG' : 'Motor_Bracket_CSG', position: [0, 0, 0], ops });
-    notes.push(`Built reinforced L-bracket (${w}×${d}×${h}mm) with Ø${shaftD}mm shaft cutout & 8 through-holes.`);
-    return { specs, notes };
-  }
+    document.getElementById('importBtn').addEventListener('click', () => fileInput.click());
 
-  // 7. Table / Stand
-  if (/\b(table|desk|stand|riser)\b/.test(low)) {
-    const [w, d, t] = dims || [120, 80, 6];
-    const h = parseFloat(low.match(/height\s*(\d+(?:\.\d+)?)/i)?.[1] || 65);
-    const ops = [{ op: 'add', shape: 'box', size: [w, t, d], pos: [0, h, 0] }];
-    for (const sx of [-1, 1]) {
-      for (const sz of [-1, 1]) {
-        ops.push({ op: 'add', shape: 'box', size: [8, h, 8], pos: [sx * (w / 2 - 6), h / 2, sz * (d / 2 - 6)] });
+    // Drag & drop STL/OBJ onto the 3D viewer
+    const viewerPane = document.querySelector('.viewer-pane');
+    viewerPane.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+    viewerPane.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (!file) return;
+      try {
+        const buf = await file.arrayBuffer();
+        handleImportedBuffer(buf, file.name);
+      } catch (err) {
+        setStatus(err && err.message ? err.message : String(err), false);
       }
-    }
-    specs.push({ name: `Stand_${w}x${d}x${h}mm`, position: [0, 0, 0], ops });
-    notes.push(`Created 4-leg stand ${w}×${d}mm, height ${h}mm.`);
-    return { specs, notes };
-  }
+    });
 
-  // 8. Default: Precision Plate with optional CSG Bolt Holes
-  const [w, d, t] = dims || [100, 70, 5];
-  const ops = [{ op: 'add', shape: 'box', size: [w, t, d], pos: [0, t / 2, 0] }];
-  const r = holeR || (low.includes('hole') || low.includes('bolt') ? 2.2 : 0);
-  if (r > 0) {
-    const inset = Math.max(8, r * 3);
-    for (const sx of [-1, 1]) {
-      for (const sz of [-1, 1]) {
-        ops.push({
-          op: 'subtract',
-          shape: 'cylinder',
-          size: [r, r, t + 6],
-          pos: [sx * (w / 2 - inset), t / 2, sz * (d / 2 - inset)]
-        });
+    // Generate a readable summary + rough CAD block approximation so the user can paste it into chat
+    const shareModal = document.getElementById('shareModal');
+    const shareCodeBox = document.getElementById('shareCodeBox');
+
+    function buildShareSnippet() {
+      const g = currentGeometry || importedGeometry;
+      if (!g) {
+        return '// No model loaded yet.';
       }
-    }
-  }
-  specs.push({ name: `Plate_${w}x${d}x${t}mm`, position: [0, 0, 0], ops });
-  notes.push(`Created precision plate ${w}×${d}×${t}mm${r > 0 ? ` with 4× Ø${(r * 2).toFixed(1)}mm through-holes` : ''}.`);
-  return { specs, notes };
-}
+      const pos = g.getAttribute('position');
+      const triCount = Math.floor(pos.count / 3);
+      const box = new THREE.Box3().setFromBufferAttribute(pos);
+      const size = new THREE.Vector3();
+      const center = new THREE.Vector3();
+      box.getSize(size);
+      box.getCenter(center);
 
-// ============================================================================
-// 6. HYBRID ZERO-KEY BUILD ORCHESTRATOR
-// ============================================================================
-async function handleGenerate() {
-  const promptText = $('#prompt-input').value.trim();
-  if (!promptText) {
-    toast('Enter what you want to build');
-    return;
-  }
+      // Slice along Y into up to 5 horizontal layers to describe profile/steps
+      const layers = 5;
+      const yMin = box.min.y;
+      const stepY = size.y / layers;
+      const layerNotes = [];
 
-  if (!state.appendMode) {
-    clearGeneratedParts(true);
-  }
-
-  log(`Prompt: "${promptText}"`, 'ai');
-  const offsetX = state.appendMode ? state.generated.length * 68 : 0;
-  let builtCount = 0;
-
-  // Try Zero-Key Cloud AI first if in 'auto' mode, seamlessly falling back to instant CSG if offline/rate-limited
-  if (state.aiMode === 'auto') {
-    setStatus('AI Synthesizing...', true);
-    try {
-      const aiPlan = await queryZeroKeyAI(promptText);
-      if (aiPlan.summary) log(`AI: ${aiPlan.summary}`, 'ok');
-      for (const partSpec of aiPlan.parts) {
-        if (offsetX && (!partSpec.position || (partSpec.position[0] === 0 && partSpec.position[2] === 0))) {
-          partSpec.position = [offsetX, partSpec.position?.[1] || 0, partSpec.position?.[2] || 0];
+      if (stepY > 0.05) {
+        for (let i = 0; i < layers; i++) {
+          const y0 = yMin + i * stepY;
+          const y1 = y0 + stepY;
+          let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, count = 0;
+          const v = new THREE.Vector3();
+          for (let k = 0; k < pos.count; k++) {
+            v.fromBufferAttribute(pos, k);
+            if (v.y >= y0 - 1e-3 && v.y <= y1 + 1e-3) {
+              if (v.x < minX) minX = v.x;
+              if (v.x > maxX) maxX = v.x;
+              if (v.z < minZ) minZ = v.z;
+              if (v.z > maxZ) maxZ = v.z;
+              count++;
+            }
+          }
+          if (count > 0 && isFinite(minX)) {
+            const lw = (maxX - minX).toFixed(1);
+            const ld = (maxZ - minZ).toFixed(1);
+            const lx = ((minX + maxX) / 2).toFixed(1);
+            const lz = ((minZ + maxZ) / 2).toFixed(1);
+            const ly = ((y0 + y1) / 2).toFixed(1);
+            layerNotes.push(
+              `// Layer ${i + 1} (Y ${y0.toFixed(1)}..${y1.toFixed(1)}mm): ~${lw}x${stepY.toFixed(1)}x${ld}mm centered near (${lx}, ${ly}, ${lz})`
+            );
+          }
         }
-        const mesh = buildCSGPart(partSpec);
-        if (mesh) {
-          builtCount++;
-          selectObject(mesh);
-        }
       }
-      if (builtCount > 0) {
-        setStatus('Zero-Key AI + CSG Ready', false);
-        toast(`AI built ${builtCount} solid part${builtCount > 1 ? 's' : ''}`);
-        frameAllObjects();
-        updateUI();
+
+      return [
+        `// Model Summary for AI (paste this in chat)`,
+        `// Source file: ${importedFileName || 'scripted/built mesh'}`,
+        `// Triangles: ${triCount}`,
+        `// Bounding Size (W x H x D): ${size.x.toFixed(2)} x ${size.y.toFixed(2)} x ${size.z.toFixed(2)} mm`,
+        `// X range: [${box.min.x.toFixed(2)}, ${box.max.x.toFixed(2)}]`,
+        `// Y range: [${box.min.y.toFixed(2)}, ${box.max.y.toFixed(2)}]`,
+        `// Z range: [${box.min.z.toFixed(2)}, ${box.max.z.toFixed(2)}]`,
+        ...layerNotes,
+        ``,
+        `// Approximate bounding approximation:`,
+        `return move(box(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)}), ${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)});`
+      ].join('
+');
+    }
+
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      shareCodeBox.value = buildShareSnippet();
+      shareModal.classList.add('open');
+    });
+
+    document.getElementById('closeShareBtn').addEventListener('click', () => {
+      shareModal.classList.remove('open');
+    });
+
+    document.getElementById('copyShareBtn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(shareCodeBox.value);
+        setStatus('Copied model summary & snippet to clipboard', true);
+      } catch {
+        shareCodeBox.select();
+        document.execCommand('copy');
+        setStatus('Copied model summary & snippet', true);
+      }
+    });
+
+    function downloadSTL() {
+      if (!currentGeometry) {
+        setStatus('Nothing to export yet — click Build or Import first.', false);
         return;
       }
-    } catch (e) {
-      // Seamless zero-delay fallback to local parametric CSG compiler
+      const rawName = (fileNameInput.value || 'custom_part').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      const finalName = rawName.toLowerCase().endsWith('.stl') ? rawName : `${rawName}.stl`;
+      const blob = geometryToBinarySTL(currentGeometry, finalName);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = finalName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus(`Exported ${finalName}`, true);
     }
-  }
 
-  // Instant 0ms CSG Synthesis
-  setStatus('Synthesizing CSG...', true);
-  const { specs, notes } = synthesizeInstantCSG(promptText);
-  for (const spec of specs) {
-    if (offsetX && spec.position[0] === 0 && spec.position[2] === 0) {
-      spec.position[0] = offsetX;
-    }
-    const mesh = buildCSGPart(spec);
-    if (mesh) {
-      builtCount++;
-      selectObject(mesh);
-    }
-  }
-  notes.forEach(n => log(n, 'ok'));
-  setStatus(state.aiMode === 'auto' ? 'Zero-Key AI + CSG Ready' : 'Instant CSG Mode', false);
-  if (builtCount > 0) {
-    toast(`Built ${builtCount} CSG solid part${builtCount > 1 ? 's' : ''}`);
-    frameAllObjects();
-  }
-  updateUI();
-}
+    presetSelect.addEventListener('change', () => {
+      editor.value = PRESETS[presetSelect.value] || PRESETS.mount_plate;
+      buildModel();
+    });
 
-// ============================================================================
-// 7. STL IMPORT / EXPORT & JSON PROJECT SAVE/LOAD
-// ============================================================================
-const stlLoader = new STLLoader();
-const stlExporter = new STLExporter();
+    document.getElementById('buildBtn').addEventListener('click', buildModel);
+    document.getElementById('exportBtn').addEventListener('click', downloadSTL);
 
-function importSTLFiles(fileList) {
-  const files = [...fileList].filter(f => f.name.toLowerCase().endsWith('.stl'));
-  if (!files.length) return toast('Please drop .STL files');
+    document.getElementById('resetCamBtn').addEventListener('click', () => {
+      camera.position.copy(defaultCamPos);
+      controls.target.set(0, 10, 0);
+      controls.update();
+    });
 
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const geom = stlLoader.parse(e.target.result);
-        geom.computeVertexNormals();
-        geom.computeBoundingBox();
-        const center = geom.boundingBox.getCenter(new THREE.Vector3());
-        const minY = geom.boundingBox.min.y;
-        geom.translate(-center.x, -minY, -center.z);
-        geom.computeBoundingBox();
+    document.getElementById('wireBtn').addEventListener('click', (e) => {
+      partMaterial.wireframe = !partMaterial.wireframe;
+      e.currentTarget.style.borderColor = partMaterial.wireframe ? '#4f8cff' : '';
+    });
 
-        const size = geom.boundingBox.getSize(new THREE.Vector3());
-        const mesh = new THREE.Mesh(geom, MATERIALS.reference.clone());
-        const cleanName = file.name.replace(/\.stl$/i, '').replace(/[^a-zA-Z0-9_-]/g, '_');
-        mesh.name = cleanName;
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        mesh.position.set(state.refs.length * 60, 0, 0);
-        mesh.userData = { kind: 'reference', baseColor: 0x64748b };
-        createEdgeLines(mesh);
-
-        assemblyRoot.add(mesh);
-        state.refs.push({ id: crypto.randomUUID(), name: cleanName, file: file.name, mesh, size });
-
-        selectObject(mesh);
-        frameAllObjects();
-        updateUI();
-        log(`Imported reference "${cleanName}" (${size.x.toFixed(1)}×${size.y.toFixed(1)}×${size.z.toFixed(1)} mm)`, 'ok');
-        toast(`Imported ${cleanName}`);
-      } catch (err) {
-        log(`STL parse error: ${err.message}`, 'warn');
+    editor.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        buildModel();
       }
-    };
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-function exportSTL(meshes, filename) {
-  if (!meshes.length) return toast('No parts to export');
-  const exportGroup = new THREE.Group();
-  meshes.forEach(m => {
-    const clone = new THREE.Mesh(m.geometry);
-    m.updateWorldMatrix(true, false);
-    clone.applyMatrix4(m.matrixWorld);
-    exportGroup.add(clone);
-  });
-  const binarySTL = stlExporter.parse(exportGroup, { binary: true });
-  const blob = new Blob([binarySTL], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
-  log(`Exported ${filename}`, 'ok');
-  toast(`Downloaded ${filename}`);
-}
-
-function saveProjectJSON() {
-  const payload = {
-    version: 3,
-    timestamp: new Date().toISOString(),
-    product: $('#product-context').value,
-    prompt: $('#prompt-input').value,
-    references: state.refs.map(r => ({
-      name: r.name,
-      file: r.file,
-      position: r.mesh.position.toArray(),
-      rotation: [r.mesh.rotation.x, r.mesh.rotation.y, r.mesh.rotation.z]
-    })),
-    generated: state.generated.map(m => ({
-      name: m.name,
-      position: m.position.toArray(),
-      rotation: [m.rotation.x, m.rotation.y, m.rotation.z],
-      stlASCII: stlExporter.parse(m, { binary: false })
-    }))
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'ai_build_lab_assembly.json';
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
-  toast('Saved assembly JSON');
-}
-
-function loadProjectJSON(file) {
-  file.text().then(txt => {
-    try {
-      const data = JSON.parse(txt);
-      $('#product-context').value = data.product || '';
-      $('#prompt-input').value = data.prompt || '';
-      clearGeneratedParts(true);
-
-      if (Array.isArray(data.generated)) {
-        data.generated.forEach(item => {
-          if (item.stlASCII) {
-            const geom = stlLoader.parse(item.stlASCII);
-            const mesh = registerGeneratedMesh(geom, item.name || 'Restored_Part', item.position || [0, 0, 0]);
-            if (item.rotation) mesh.rotation.set(...item.rotation);
-          }
-        });
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
       }
-      if (Array.isArray(data.references)) {
-        data.references.forEach(savedRef => {
-          const match = state.refs.find(r => r.file === savedRef.file || r.name === savedRef.name);
-          if (match && savedRef.position) {
-            match.mesh.position.set(...savedRef.position);
-            if (savedRef.rotation) match.mesh.rotation.set(...savedRef.rotation);
-          }
-        });
-      }
-      updateUI();
-      frameAllObjects();
-      log(`Restored ${data.generated?.length || 0} generated meshes`, 'ok');
-      toast('Project loaded');
-    } catch {
-      toast('Invalid JSON file');
+    });
+
+    window.addEventListener('resize', () => {
+      if (!host.clientWidth || !host.clientHeight) return;
+      camera.aspect = host.clientWidth / host.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(host.clientWidth, host.clientHeight);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
     }
-  });
-}
 
-// ============================================================================
-// 8. SELECTION, INSPECTOR & VIEWPORT INTERACTION
-// ============================================================================
-function selectObject(mesh) {
-  if (state.selected && state.selected.material) {
-    state.selected.material.color.setHex(state.selected.userData.baseColor);
-    state.selected.material.emissive?.setHex(0x000000);
-  }
-  state.selected = mesh;
-  if (mesh) {
-    mesh.material.color.setHex(0x38bdf8);
-    mesh.material.emissive?.setHex(0x0284c7);
-    mesh.material.emissiveIntensity = 0.25;
-    transform.attach(mesh);
-  } else {
-    transform.detach();
-  }
-  updateUI();
-}
+    editor.value = PRESETS.mount_plate;
+    buildModel();
+    animate();
+  </script>
 
-function clearGeneratedParts(silent = false) {
-  state.generated.forEach(m => {
-    if (state.selected === m) selectObject(null);
-    assemblyRoot.remove(m);
-    m.geometry?.dispose();
-  });
-  state.generated = [];
-  if (!silent) {
-    updateUI();
-    log('Cleared generated parts');
-  }
-}
 
-function deleteSelected() {
-  const m = state.selected;
-  if (!m) return;
-  selectObject(null);
-  assemblyRoot.remove(m);
-  m.geometry?.dispose();
-  state.refs = state.refs.filter(r => r.mesh !== m);
-  state.generated = state.generated.filter(g => g !== m);
-  updateUI();
-  log(`Deleted "${m.name}"`);
-}
-
-function frameAllObjects() {
-  const box = new THREE.Box3().setFromObject(assemblyRoot);
-  if (box.isEmpty()) return;
-  const center = box.getCenter(new THREE.Vector3());
-  const size = box.getSize(new THREE.Vector3());
-  const maxDim = Math.max(size.x, size.y, size.z, 40);
-  orbit.target.copy(center);
-  camera.position.copy(center).add(new THREE.Vector3(maxDim * 1.45, maxDim * 1.1, maxDim * 1.65));
-  orbit.update();
-}
-
-function updateUI() {
-  const total = state.refs.length + state.generated.length;
-  $('#empty-hero').classList.toggle('hidden', total > 0);
-  $('#part-count-badge').textContent = `${total} part${total === 1 ? '' : 's'}`;
-  $('#hud-telemetry').textContent = `${state.refs.length} ref · ${state.generated.length} generated${state.selected ? ` · Selected: ${state.selected.name}` : ''}`;
-
-  const tree = $('#scene-tree');
-  tree.innerHTML = '';
-
-  const allItems = [
-    ...state.refs.map(r => ({ kind: 'ref', mesh: r.mesh })),
-    ...state.generated.map(m => ({ kind: 'gen', mesh: m }))
-  ];
-
-  allItems.forEach(({ kind, mesh }) => {
-    const b = getBBox(mesh);
-    const row = document.createElement('div');
-    row.className = 'tree-item' + (state.selected === mesh ? ' selected' : '');
-    row.innerHTML = `
-      <span class="tree-dot ${kind}"></span>
-      <div class="tree-info">
-        <div class="tree-name">${mesh.name}</div>
-        <div class="tree-meta">${b.size.x.toFixed(1)}×${b.size.y.toFixed(1)}×${b.size.z.toFixed(1)} mm</div>
-      </div>
-      <div class="tree-actions">
-        <button class="mini-btn" data-act="dl" title="Export STL">↓</button>
-        <button class="mini-btn" data-act="del" title="Remove">✕</button>
-      </div>
-    `;
-    row.onclick = (e) => {
-      if (e.target.dataset.act === 'dl') return exportSTL([mesh], `${mesh.name}.stl`);
-      if (e.target.dataset.act === 'del') { selectObject(mesh); return deleteSelected(); }
-      selectObject(mesh);
-    };
-    tree.appendChild(row);
-  });
-
-  renderInspector();
-}
-
-function renderInspector() {
-  const box = $('#inspector-body');
-  const m = state.selected;
-  if (!m) {
-    $('#selected-type-badge').textContent = 'None';
-    box.innerHTML = `<div style="color:var(--text-muted); font-size:12px; line-height:1.5;">Click any mesh in the 3D viewport or outliner to inspect dimensions, edit coordinates, or export individually.</div>`;
-    return;
-  }
-
-  const isRef = m.userData.kind === 'reference';
-  $('#selected-type-badge').textContent = isRef ? 'Reference STL' : 'CSG Solid';
-  const b = getBBox(m);
-
-  box.innerHTML = `
-    <label class="field-label">Part Name (used in prompts)</label>
-    <input type="text" id="insp-name" value="${m.name}" style="margin-bottom:10px" />
-
-    <label class="field-label">Position (mm)</label>
-    <div class="vec-grid">
-      <div class="vec-cell"><span class="x">X</span><input type="number" step="1" id="insp-px" value="${m.position.x.toFixed(1)}"></div>
-      <div class="vec-cell"><span class="y">Y</span><input type="number" step="1" id="insp-py" value="${m.position.y.toFixed(1)}"></div>
-      <div class="vec-cell"><span class="z">Z</span><input type="number" step="1" id="insp-pz" value="${m.position.z.toFixed(1)}"></div>
-    </div>
-
-    <label class="field-label">Rotation (deg)</label>
-    <div class="vec-grid">
-      <div class="vec-cell"><span class="x">X</span><input type="number" step="5" id="insp-rx" value="${THREE.MathUtils.radToDeg(m.rotation.x).toFixed(0)}"></div>
-      <div class="vec-cell"><span class="y">Y</span><input type="number" step="5" id="insp-ry" value="${THREE.MathUtils.radToDeg(m.rotation.y).toFixed(0)}"></div>
-      <div class="vec-cell"><span class="z">Z</span><input type="number" step="5" id="insp-rz" value="${THREE.MathUtils.radToDeg(m.rotation.z).toFixed(0)}"></div>
-    </div>
-
-    <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-secondary); margin-bottom:10px;">
-      Envelope: ${b.size.x.toFixed(1)} × ${b.size.y.toFixed(1)} × ${b.size.z.toFixed(1)} mm
-    </div>
-
-    <div style="display:flex; gap:6px;">
-      <button class="btn" id="insp-export" style="flex:1">↓ Export STL</button>
-      <button class="btn danger" id="insp-delete">Delete</button>
-    </div>
-  `;
-
-  $('#insp-name').onchange = (e) => {
-    const val = e.target.value.trim();
-    if (!val) return;
-    m.name = val;
-    const refObj = state.refs.find(r => r.mesh === m);
-    if (refObj) refObj.name = val;
-    updateUI();
-  };
-
-  ['px', 'py', 'pz'].forEach((id, idx) => {
-    $(`#insp-${id}`).onchange = (e) => {
-      const v = parseFloat(e.target.value) || 0;
-      if (idx === 0) m.position.x = v;
-      if (idx === 1) m.position.y = v;
-      if (idx === 2) m.position.z = v;
-      updateUI();
-    };
-  });
-
-  ['rx', 'ry', 'rz'].forEach((id, idx) => {
-    $(`#insp-${id}`).onchange = (e) => {
-      const rad = THREE.MathUtils.degToRad(parseFloat(e.target.value) || 0);
-      if (idx === 0) m.rotation.x = rad;
-      if (idx === 1) m.rotation.y = rad;
-      if (idx === 2) m.rotation.z = rad;
-      updateUI();
-    };
-  });
-
-  $('#insp-export').onclick = () => exportSTL([m], `${m.name}.stl`);
-  $('#insp-delete').onclick = deleteSelected;
-}
-
-function updateInspectorValues() {
-  const m = state.selected;
-  if (!m || !$('#insp-px')) return;
-  $('#insp-px').value = m.position.x.toFixed(1);
-  $('#insp-py').value = m.position.y.toFixed(1);
-  $('#insp-pz').value = m.position.z.toFixed(1);
-  $('#insp-rx').value = THREE.MathUtils.radToDeg(m.rotation.x).toFixed(0);
-  $('#insp-ry').value = THREE.MathUtils.radToDeg(m.rotation.y).toFixed(0);
-  $('#insp-rz').value = THREE.MathUtils.radToDeg(m.rotation.z).toFixed(0);
-}
-
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-let downPos = { x: 0, y: 0 };
-
-renderer.domElement.addEventListener('pointerdown', (e) => { downPos = { x: e.clientX, y: e.clientY }; });
-renderer.domElement.addEventListener('pointerup', (e) => {
-  if (transform.dragging) return;
-  if (Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > 4) return;
-  const rect = renderer.domElement.getBoundingClientRect();
-  pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(pointer, camera);
-  const hits = raycaster.intersectObjects([...state.refs.map(r => r.mesh), ...state.generated], false);
-  selectObject(hits.length ? hits[0].object : null);
-});
-
-// ============================================================================
-// 9. EVENT WIRING
-// ============================================================================
-$('#btn-generate').onclick = handleGenerate;
-$('#prompt-input').addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleGenerate();
-});
-
-document.querySelectorAll('.chip').forEach(chip => {
-  chip.onclick = () => {
-    $('#prompt-input').value = chip.dataset.preset;
-    handleGenerate();
-  };
-});
-
-$('#btn-append-mode').onclick = () => {
-  state.appendMode = !state.appendMode;
-  $('#btn-append-mode').textContent = `Mode: ${state.appendMode ? 'Add' : 'Replace'}`;
-  toast(state.appendMode ? 'Add Mode: builds append to scene' : 'Replace Mode: new builds replace old');
-};
-
-$('#btn-ai-toggle').onclick = () => {
-  state.aiMode = state.aiMode === 'auto' ? 'instant' : 'auto';
-  const isAuto = state.aiMode === 'auto';
-  $('#btn-ai-toggle').textContent = isAuto ? '✦ AI Mode: Auto' : '⚡ AI Mode: Instant';
-  $('#engine-badge').textContent = isAuto ? 'Zero-Key AI' : '0ms Instant CSG';
-  setStatus(isAuto ? 'Zero-Key AI + CSG Ready' : 'Instant CSG Mode', false);
-  toast(isAuto ? 'Auto Mode: Uses free keyless AI with instant CSG fallback' : 'Instant Mode: 0ms local CSG synthesis');
-};
-
-const dz = $('#stl-dropzone');
-const stlIn = $('#input-stl');
-dz.onclick = () => stlIn.click();
-dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('dragover'); };
-dz.ondragleave = () => dz.classList.remove('dragover');
-dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('dragover'); importSTLFiles(e.dataTransfer.files); };
-stlIn.onchange = (e) => { importSTLFiles(e.target.files); stlIn.value = ''; };
-
-$('#gizmo-translate').onclick = () => {
-  transform.setMode('translate');
-  $('#gizmo-translate').classList.add('active');
-  $('#gizmo-rotate').classList.remove('active');
-};
-$('#gizmo-rotate').onclick = () => {
-  transform.setMode('rotate');
-  $('#gizmo-rotate').classList.add('active');
-  $('#gizmo-translate').classList.remove('active');
-};
-$('#btn-snap-grid').onclick = () => {
-  if (!state.selected) return toast('Select a part first');
-  const s = 5;
-  state.selected.position.set(
-    Math.round(state.selected.position.x / s) * s,
-    Math.round(state.selected.position.y / s) * s,
-    Math.round(state.selected.position.z / s) * s
-  );
-  updateUI();
-  toast('Snapped to 5mm grid');
-};
-$('#btn-fit-anim').onclick = () => {
-  if (!state.selected) return toast('Select a part first');
-  state.fitAnim = {
-    mesh: state.selected,
-    from: state.selected.position.clone(),
-    to: state.selected.position.clone().add(new THREE.Vector3(0, -18, 0)),
-    t: 0
-  };
-};
-$('#btn-wireframe').onclick = () => {
-  state.wireframe = !state.wireframe;
-  $('#btn-wireframe').classList.toggle('active', state.wireframe);
-  [...state.refs.map(r => r.mesh), ...state.generated].forEach(m => { m.material.wireframe = state.wireframe; });
-};
-$('#btn-fit-cam').onclick = frameAllObjects;
-$('#btn-reset-cam').onclick = () => {
-  orbit.target.set(0, 18, 0);
-  camera.position.set(165, 130, 195);
-  orbit.update();
-};
-$('#btn-clear-gen').onclick = () => clearGeneratedParts(false);
-
-$('#btn-export-all').onclick = () => exportSTL(state.generated, 'ai_build_lab_assembly.stl');
-$('#btn-save-json').onclick = saveProjectJSON;
-$('#btn-load-json').onclick = () => $('#input-json').click();
-$('#input-json').onchange = (e) => { if (e.target.files[0]) loadProjectJSON(e.target.files[0]); e.target.value = ''; };
-
-window.addEventListener('keydown', (e) => {
-  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
-  if (e.key.toLowerCase() === 'w') $('#gizmo-translate').click();
-  if (e.key.toLowerCase() === 'e') $('#gizmo-rotate').click();
-  if (e.key.toLowerCase() === 'f') frameAllObjects();
-  if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
-});
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-function animate() {
-  requestAnimationFrame(animate);
-  orbit.update();
-  if (state.fitAnim) {
-    state.fitAnim.t += 0.025;
-    const p = Math.min(state.fitAnim.t, 1);
-    const wave = Math.sin(p * Math.PI);
-    state.fitAnim.mesh.position.lerpVectors(state.fitAnim.from, state.fitAnim.to, wave);
-    if (p >= 1) {
-      state.fitAnim.mesh.position.copy(state.fitAnim.from);
-      state.fitAnim = null;
-    }
-  }
-  renderer.render(scene, camera);
-}
-
-updateUI();
-log('Zero-Key Generative CAD Studio ready. No API keys or setup required.', 'ok');
-animate();
-</script>
-</body>
-</html>
+</body></html>

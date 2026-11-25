@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>STL CAD Studio v4 — Import, Code &amp; Export</title>
+<title>STL to Triangle TXT Converter</title>
 <style>
   :root {
     --bg: #0c0f16;
@@ -16,7 +16,6 @@
     --accent-hover: #699fff;
     --success: #2ecc71;
     --danger: #ff5c77;
-    --warn: #f5b942;
   }
 
   * {
@@ -29,68 +28,61 @@
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
   }
 
   header {
-    height: 54px;
     background: var(--panel);
     border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 14px;
-    gap: 10px;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
   .brand {
-    display: flex;
-    align-items: center;
-    gap: 9px;
     font-weight: 700;
     font-size: 15px;
-    letter-spacing: 0.2px;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .badge {
     font-size: 11px;
-    padding: 2px 7px;
+    padding: 2px 8px;
     border-radius: 999px;
     background: rgba(79, 140, 255, 0.16);
-    color: var(--accent);
+    color: #9ec0ff;
     border: 1px solid rgba(79, 140, 255, 0.35);
-    font-weight: 600;
   }
 
   .controls {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
-  select, button, input[type="text"] {
+  button, select {
     font-family: inherit;
     font-size: 12.5px;
     border-radius: 7px;
     border: 1px solid var(--border);
     background: var(--panel-2);
     color: var(--text);
-    padding: 6px 10px;
+    padding: 7px 12px;
+    cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
   }
 
-  select, button {
-    cursor: pointer;
-  }
-
-  select:hover, button:hover {
-    border-color: #3b4766;
+  button:hover, select:hover {
     background: #21283b;
+    border-color: #3d4868;
   }
 
   button.primary {
@@ -102,7 +94,6 @@
 
   button.primary:hover {
     background: var(--accent-hover);
-    border-color: var(--accent-hover);
   }
 
   button.success {
@@ -113,1098 +104,345 @@
   }
 
   button.success:hover {
-    background: rgba(46, 204, 113, 0.26);
+    background: rgba(46, 204, 113, 0.25);
   }
 
-  button.warn {
-    background: rgba(245, 185, 66, 0.14);
-    border-color: rgba(245, 185, 66, 0.42);
-    color: #ffd479;
-    font-weight: 600;
-  }
-
-  button.warn:hover {
-    background: rgba(245, 185, 66, 0.24);
-  }
-
-  .main {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 45% 55%;
-    min-height: 0;
-  }
-
-  .editor-pane {
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border);
-    background: var(--panel);
-    min-height: 0;
-  }
-
-  .pane-bar {
-    height: 36px;
-    padding: 0 12px;
+  .dropzone {
+    margin: 14px 16px 0;
+    border: 1.5px dashed #323c58;
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: rgba(19, 23, 34, 0.75);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    color: var(--muted);
-    background: #10141d;
-    gap: 8px;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
-  .ref-bar {
-    padding: 7px 12px;
-    border-bottom: 1px solid var(--border);
-    background: #111520;
-    font-size: 11.5px;
-    color: var(--muted);
-    line-height: 1.5;
+  .dropzone.dragover {
+    border-color: var(--accent);
+    background: rgba(79, 140, 255, 0.12);
   }
 
-  .ref-bar code {
-    color: #9ec0ff;
-    background: rgba(79, 140, 255, 0.1);
-    padding: 1px 4px;
-    border-radius: 4px;
-  }
-
-  #codeEditor {
-    flex: 1;
-    width: 100%;
-    resize: none;
-    border: none;
-    outline: none;
-    background: #0b0e15;
-    color: #dde4f7;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  .dropzone p {
     font-size: 13px;
-    line-height: 1.55;
-    padding: 14px;
-    tab-size: 2;
-  }
-
-  .status-bar {
-    min-height: 36px;
-    padding: 6px 12px;
-    border-top: 1px solid var(--border);
-    background: #10141d;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .status-ok {
-    color: #6ee7a0;
-  }
-
-  .status-err {
-    color: var(--danger);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    white-space: pre-wrap;
-  }
-
-  .viewer-pane {
-    position: relative;
-    background: radial-gradient(circle at 50% 35%, #1c2233 0%, #090b10 100%);
-    min-height: 0;
-  }
-
-  #canvasHost {
-    width: 100%;
-    height: 100%;
-  }
-
-  .hud-top {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    gap: 6px;
-    z-index: 2;
-  }
-
-  .hud-top button {
-    background: rgba(18, 22, 34, 0.85);
-    backdrop-filter: blur(6px);
-    padding: 5px 10px;
-    font-size: 12px;
-  }
-
-  .hud-bottom {
-    position: absolute;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 10px;
-    pointer-events: none;
-  }
-
-  .hud-card {
-    background: rgba(16, 20, 30, 0.85);
-    backdrop-filter: blur(6px);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 11px;
-    font-size: 11.5px;
     color: var(--muted);
-    line-height: 1.45;
   }
 
-  .hud-card strong {
+  .dropzone strong {
     color: var(--text);
   }
 
-  /* Modal for copying model description/code to paste into chat */
-  .modal-backdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(5, 7, 12, 0.72);
-    backdrop-filter: blur(4px);
-    z-index: 20;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-
-  .modal-backdrop.open {
-    display: flex;
-  }
-
-  .modal {
-    width: min(720px, 100%);
-    max-height: 85vh;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .modal-head {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
+  .meta-bar {
+    padding: 10px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-  }
-
-  .modal-body {
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    overflow: auto;
-  }
-
-  .modal-body p {
+    gap: 12px;
+    flex-wrap: wrap;
     font-size: 12.5px;
     color: var(--muted);
-    line-height: 1.45;
   }
 
-  #shareCodeBox {
+  .ok { color: #6ee7a0; }
+  .err { color: var(--danger); }
+
+  .output-wrap {
+    flex: 1;
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 360px;
+  }
+
+  #txtOutput {
+    flex: 1;
     width: 100%;
-    min-height: 260px;
-    background: #0b0e15;
-    color: #dde4f7;
+    min-height: 380px;
+    background: #090c12;
+    color: #dce4f7;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 9px;
+    padding: 14px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 12.5px;
     line-height: 1.5;
     resize: vertical;
-  }
-
-  @media (max-width: 860px) {
-    body {
-      height: auto;
-      min-height: 100vh;
-      overflow: auto;
-    }
-    .main {
-      grid-template-columns: 1fr;
-      grid-template-rows: 390px 440px;
-    }
-    .editor-pane {
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-    }
   }
 </style>
 </head>
 <body>
   <header>
     <div class="brand">
-      <span>STL CAD Studio</span>
-      <span class="badge">v4 &bull; Mesh Inspector</span>
+      <span>STL &rarr; Triangle TXT Dump</span>
+      <span class="badge">Binary &amp; ASCII STL</span>
     </div>
     <div class="controls">
-      <input id="fileInput" type="file" accept=".stl,.obj" style="display: none;" />
-      <button id="importBtn">Import STL/OBJ</button>
-      <button id="shareBtn" class="warn">Copy Model Code for AI</button>
-      <select id="presetSelect" title="Load a preset script">
-        <option value="mount_plate">Preset: Controller &amp; Sensor Mount</option>
-        <option value="use_imported">Preset: Modify Imported Model</option>
-        <option value="spacer_ring">Preset: Spacer &amp; Collar</option>
+      <input id="stlFileInput" type="file" accept=".stl" style="display: none;" />
+      <button id="pickFileBtn" class="primary">Choose .STL File</button>
+      <select id="formatMode" title="Output verbosity">
+        <option value="compact">Compact (1 line per triangle: T# | V1 | V2 | V3)</option>
+        <option value="detailed">Detailed (Includes Normal &amp; Edge Lengths)</option>
       </select>
-      <button id="buildBtn" class="primary">Build (Ctrl+Enter)</button>
-      <input id="fileNameInput" type="text" value="custom_part" title="Export filename" style="width: 112px;" />
-      <button id="exportBtn" class="success">Export .STL</button>
+      <button id="copyBtn">Copy TXT</button>
+      <button id="downloadTxtBtn" class="success">Download .TXT</button>
     </div>
   </header>
 
-  <div class="main">
-    <section class="editor-pane">
-      <div class="pane-bar">
-        <span>CAD Script (JS + Primitives + Imported Model Variable)</span>
-        <span>1 unit = 1 mm</span>
-      </div>
-      <div class="ref-bar">
-        Imported mesh: <code>imported</code> (use <code>hasImported</code> to check) &bull;
-        Shapes: <code>box(w,h,d)</code> <code>cyl(rTop,rBot,h,seg)</code> <code>tube(rOut,rIn,h,seg)</code> <code>cone(r,h,seg)</code> <code>sphere(r,wSeg,hSeg)</code><br/>
-        Xform &amp; CSG: <code>move(g,x,y,z)</code> / <code>translate(...)</code> <code>rot(g,rx,ry,rz)</code> / <code>rotate(...)</code> <code>scale(g,sx,sy,sz)</code> <code>add(...gs)</code> / <code>union(...)</code> <code>sub(base,...cuts)</code> <code>deg(d)</code>
-      </div>
-      <textarea id="codeEditor" spellcheck="false"></textarea>
-      <div class="status-bar">
-        <span id="statusText" class="status-ok">Ready</span>
-        <span id="statsText" style="color: var(--muted);">0 tris &bull; 0&times;0&times;0 mm</span>
-      </div>
-    </section>
-
-    <section class="viewer-pane">
-      <div class="hud-top">
-        <button id="resetCamBtn">Reset View</button>
-        <button id="wireBtn">Wireframe</button>
-      </div>
-      <div id="canvasHost"></div>
-      <div class="hud-bottom">
-        <div class="hud-card">
-          Left-drag: Orbit &bull; Right-drag: Pan &bull; Scroll: Zoom &bull; Drag &amp; drop .stl/.obj anywhere
-        </div>
-        <div id="boundsCard" class="hud-card">
-          <strong>Bounds:</strong> &mdash;
-        </div>
-      </div>
-    </section>
+  <div id="dropzone" class="dropzone">
+    <p><strong>Drop an .STL file here</strong> or click <strong>Choose .STL File</strong> to dump every triangle into readable text.</p>
+    <span id="fileInfo" style="font-size: 12px; color: var(--muted);">No file loaded</span>
   </div>
 
-  <div id="shareModal" class="modal-backdrop" role="dialog" aria-modal="true">
-    <div class="modal">
-      <div class="modal-head">
-        <strong>Model Summary &amp; Code Snippet for Chat</strong>
-        <div style="display: flex; gap: 8px;">
-          <button id="copyShareBtn" class="primary">Copy to Clipboard</button>
-          <button id="closeShareBtn">Close</button>
-        </div>
-      </div>
-      <div class="modal-body">
-        <p>
-          Paste this into the chat so I can see the exact dimensions, bounds, and approximate block/primitive breakdown of your current or imported 3D model without needing raw binary STL bytes.
-        </p>
-        <textarea id="shareCodeBox" readonly></textarea>
-      </div>
-    </div>
+  <div class="meta-bar">
+    <span id="statusMsg" class="ok">Ready</span>
+    <span id="triStats">0 triangles</span>
   </div>
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  <div class="output-wrap">
+    <textarea id="txtOutput" spellcheck="false" placeholder="Every triangle from your STL will appear here as plain text..."></textarea>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('stlFileInput');
+    const pickFileBtn = document.getElementById('pickFileBtn');
+    const dropzone = document.getElementById('dropzone');
+    const formatMode = document.getElementById('formatMode');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadTxtBtn = document.getElementById('downloadTxtBtn');
+    const txtOutput = document.getElementById('txtOutput');
+    const statusMsg = document.getElementById('statusMsg');
+    const triStats = document.getElementById('triStats');
+    const fileInfo = document.getElementById('fileInfo');
+
+    let lastFileName = 'model';
+    let lastParsed = null;
+
+    function setStatus(msg, isOk = true) {
+      statusMsg.textContent = msg;
+      statusMsg.className = isOk ? 'ok' : 'err';
     }
-  }
-  </script>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { STLLoader } from 'three/addons/loaders/STLLoader.js';
-    import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-    import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-
-    let importedGeometry = null;
-    let importedFileName = '';
-
-    const PRESETS = {
-      mount_plate: `// Base plate + side rails + angled sensor cradle (mm)
-const baseW = 56;
-const baseD = 38;
-const baseT = 3.0;
-
-const basePlate = move(box(baseW, baseT, baseD), 0, baseT / 2, 0);
-const leftRail  = move(box(baseW, 8, 2.4), 0, baseT + 4, -baseD / 2 + 1.2);
-const rightRail = move(box(baseW, 8, 2.4), 0, baseT + 4,  baseD / 2 - 1.2);
-
-const tilt = deg(-8);
-const sensorPad  = move(rot(box(20, 3.0, 22), tilt, 0, 0), 8, baseT + 4.5, 0);
-const cheekLeft  = move(rot(box(20, 7.0, 2.2), tilt, 0, 0), 8, baseT + 6.5, -11);
-const cheekRight = move(rot(box(20, 7.0, 2.2), tilt, 0, 0), 8, baseT + 6.5,  11);
-
-const solid = add(basePlate, leftRail, rightRail, sensorPad, cheekLeft, cheekRight);
-const hole1 = move(cyl(1.5, 1.5, 10, 24), -22, 2, -13);
-const hole2 = move(cyl(1.5, 1.5, 10, 24), -22, 2,  13);
-const hole3 = move(cyl(1.5, 1.5, 10, 24),  22, 2, -13);
-const hole4 = move(cyl(1.5, 1.5, 10, 24),  22, 2,  13);
-
-return sub(solid, hole1, hole2, hole3, hole4);`,
-
-      use_imported: `// Uses your imported STL/OBJ ("imported") if one is loaded,
-// otherwise falls back to a starter block so Build always works.
-if (!hasImported) {
-  return move(box(40, 10, 30), 0, 5, 0);
-}
-
-// Example: sit the imported model cleanly on y = 0 and add a base riser
-const baseRiser = move(box(50, 3, 50), 0, 1.5, 0);
-const onDeck = move(imported, 0, 3, 0);
-return add(baseRiser, onDeck);`,
-
-      spacer_ring: `// Stepped collar / standoff ring (mm)
-const outer = move(tube(14, 6, 10, 40), 0, 5, 0);
-const lip = move(tube(18, 12, 3, 40), 0, 1.5, 0);
-return add(outer, lip);`
-    };
-
-    function normalizeGeometry(geom) {
-      const g = geom.index ? geom.toNonIndexed() : geom.clone();
-      if (!g.getAttribute('normal')) {
-        g.computeVertexNormals();
-      }
-      for (const key of Object.keys(g.attributes)) {
-        if (key !== 'position' && key !== 'normal') {
-          g.deleteAttribute(key);
+    function isAsciiSTL(buffer) {
+      const len = Math.min(buffer.byteLength, 2048);
+      const bytes = new Uint8Array(buffer, 0, len);
+      const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes).trimStart();
+      if (!text.toLowerCase().startsWith('solid')) return false;
+      // Check if there are non-ASCII/control bytes typical of binary STL
+      for (let i = 0; i < len; i++) {
+        const b = bytes[i];
+        if (b < 9 || (b > 13 && b < 32) || b === 127) {
+          return false;
         }
       }
-      return g;
+      return /facet\s+normal/i.test(new TextDecoder().decode(new Uint8Array(buffer, 0, Math.min(buffer.byteLength, 65536))));
     }
 
-    function getTriangles(geom) {
-      const g = normalizeGeometry(geom);
-      const pos = g.getAttribute('position');
-      const tris = [];
-      for (let i = 0; i < pos.count; i += 3) {
-        tris.push([
-          new THREE.Vector3().fromBufferAttribute(pos, i),
-          new THREE.Vector3().fromBufferAttribute(pos, i + 1),
-          new THREE.Vector3().fromBufferAttribute(pos, i + 2)
-        ]);
-      }
-      return tris;
-    }
+    function parseSTL(buffer) {
+      if (isAsciiSTL(buffer)) {
+        const text = new TextDecoder().decode(buffer);
+        const triangles = [];
+        const facetRegex = /facet\s+normal\s+([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)\s+([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)\s+([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)([\s\S]*?)endfacet/gi;
+        const vertexRegex = /vertex\s+([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)\s+([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)\s+([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)/gi;
 
-    function trianglesToGeometry(tris) {
-      const positions = new Float32Array(tris.length * 9);
-      let idx = 0;
-      for (const [a, b, c] of tris) {
-        positions[idx++] = a.x; positions[idx++] = a.y; positions[idx++] = a.z;
-        positions[idx++] = b.x; positions[idx++] = b.y; positions[idx++] = b.z;
-        positions[idx++] = c.x; positions[idx++] = c.y; positions[idx++] = c.z;
-      }
-      const g = new THREE.BufferGeometry();
-      g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      g.computeVertexNormals();
-      return g;
-    }
-
-    function splitTriangleByPlane(tri, normal, planeDist, eps = 1e-5) {
-      const [a, b, c] = tri;
-      const pts = [a, b, c];
-      const dists = pts.map(p => normal.dot(p) - planeDist);
-      const sides = dists.map(d => (d > eps ? 1 : d < -eps ? -1 : 0));
-
-      const front = [];
-      const back = [];
-
-      if (sides.every(s => s >= 0)) {
-        front.push([a.clone(), b.clone(), c.clone()]);
-        return { front, back };
-      }
-      if (sides.every(s => s <= 0)) {
-        back.push([a.clone(), b.clone(), c.clone()]);
-        return { front, back };
-      }
-
-      const poly = [a, b, c];
-      const clipSide = (pList, keepPositive) => {
-        const out = [];
-        for (let i = 0; i < pList.length; i++) {
-          const cur = pList[i];
-          const nxt = pList[(i + 1) % pList.length];
-          const dCur = normal.dot(cur) - planeDist;
-          const dNxt = normal.dot(nxt) - planeDist;
-          const inCur = keepPositive ? dCur >= -eps : dCur <= eps;
-          const inNxt = keepPositive ? dNxt >= -eps : dNxt <= eps;
-
-          if (inCur && inNxt) {
-            out.push(nxt.clone());
-          } else if (inCur && !inNxt) {
-            const t = dCur / (dCur - dNxt);
-            out.push(cur.clone().lerp(nxt, THREE.MathUtils.clamp(t, 0, 1)));
-          } else if (!inCur && inNxt) {
-            const t = dCur / (dCur - dNxt);
-            out.push(cur.clone().lerp(nxt, THREE.MathUtils.clamp(t, 0, 1)));
-            out.push(nxt.clone());
+        let fm;
+        while ((fm = facetRegex.exec(text)) !== null) {
+          const n = [parseFloat(fm[1]), parseFloat(fm[2]), parseFloat(fm[3])];
+          const body = fm[4];
+          const verts = [];
+          let vm;
+          vertexRegex.lastIndex = 0;
+          while ((vm = vertexRegex.exec(body)) !== null) {
+            verts.push([parseFloat(vm[1]), parseFloat(vm[2]), parseFloat(vm[3])]);
+          }
+          if (verts.length === 3) {
+            triangles.push({ n, v1: verts[0], v2: verts[1], v3: verts[2] });
           }
         }
-        const outTris = [];
-        for (let i = 1; i < out.length - 1; i++) {
-          if (out[0].distanceToSquared(out[i]) > 1e-10 &&
-              out[i].distanceToSquared(out[i + 1]) > 1e-10 &&
-              out[0].distanceToSquared(out[i + 1]) > 1e-10) {
-            outTris.push([out[0].clone(), out[i].clone(), out[i + 1].clone()]);
-          }
-        }
-        return outTris;
-      };
-
-      front.push(...clipSide(poly, true));
-      back.push(...clipSide(poly, false));
-      return { front, back };
-    }
-
-    function extractConvexPlanes(cutterGeom) {
-      const tris = getTriangles(cutterGeom);
-      const planes = [];
-      const ab = new THREE.Vector3();
-      const ac = new THREE.Vector3();
-      const n = new THREE.Vector3();
-
-      for (const [a, b, c] of tris) {
-        ab.subVectors(b, a);
-        ac.subVectors(c, a);
-        n.crossVectors(ab, ac);
-        const len = n.length();
-        if (len < 1e-6) continue;
-        n.divideScalar(len);
-        const d = n.dot(a);
-
-        let merged = false;
-        for (const p of planes) {
-          if (p.normal.dot(n) > 0.9995 && Math.abs(p.dist - d) < 1e-3) {
-            merged = true;
-            break;
-          }
-        }
-        if (!merged) {
-          planes.push({ normal: n.clone(), dist: d });
-        }
+        return { format: 'ASCII STL', triangles };
       }
 
-      const center = new THREE.Vector3();
-      for (const [a, b, c] of tris) {
-        center.add(a).add(b).add(c);
-      }
-      if (tris.length > 0) center.divideScalar(tris.length * 3);
-
-      for (const p of planes) {
-        if (p.normal.dot(center) - p.dist > 0) {
-          p.normal.negate();
-          p.dist = -p.dist;
-        }
-      }
-      return planes;
-    }
-
-    function pointInsidePlanes(pt, planes, eps = 1e-4) {
-      for (const p of planes) {
-        if (p.normal.dot(pt) - p.dist > eps) return false;
-      }
-      return true;
-    }
-
-    function subtractConvexCutter(baseTris, cutterGeom) {
-      const planes = extractConvexPlanes(cutterGeom);
-      if (planes.length === 0) return baseTris;
-
-      const box = new THREE.Box3().setFromBufferAttribute(normalizeGeometry(cutterGeom).getAttribute('position'));
-      const kept = [];
-      const centroid = new THREE.Vector3();
-
-      for (const tri of baseTris) {
-        const triBox = new THREE.Box3().setFromPoints(tri);
-        if (!triBox.intersectsBox(box)) {
-          kept.push(tri);
-          continue;
-        }
-
-        let outsidePieces = [tri];
-        for (const p of planes) {
-          const nextOutside = [];
-          for (const piece of outsidePieces) {
-            const split = splitTriangleByPlane(piece, p.normal, p.dist);
-            nextOutside.push(...split.front);
-          }
-          outsidePieces = nextOutside;
-        }
-
-        for (const piece of outsidePieces) {
-          centroid.copy(piece[0]).add(piece[1]).add(piece[2]).divideScalar(3);
-          if (!pointInsidePlanes(centroid, planes, -1e-4)) {
-            kept.push(piece);
-          }
-        }
+      if (buffer.byteLength < 84) {
+        throw new Error('File is too small to be a valid STL.');
       }
 
-      return kept;
-    }
-
-    const CAD = {
-      deg: (d) => (d * Math.PI) / 180,
-      box: (w = 20, h = 20, d = 20) => normalizeGeometry(new THREE.BoxGeometry(w, h, d)),
-      cyl: (rTop = 10, rBot = 10, h = 20, segs = 36) =>
-        normalizeGeometry(new THREE.CylinderGeometry(rTop, rBot, h, segs, 1, false)),
-      tube: (rOut = 12, rIn = 8, h = 10, segs = 36) => {
-        const shape = new THREE.Shape();
-        shape.absarc(0, 0, rOut, 0, Math.PI * 2, false);
-        const hole = new THREE.Path();
-        hole.absarc(0, 0, Math.max(0.1, rIn), 0, Math.PI * 2, true);
-        shape.holes.push(hole);
-        const g = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false, curveSegments: segs });
-        g.rotateX(-Math.PI / 2);
-        g.translate(0, -h / 2, 0);
-        return normalizeGeometry(g);
-      },
-      cone: (r = 10, h = 20, segs = 36) => normalizeGeometry(new THREE.ConeGeometry(r, h, segs, 1, false)),
-      sphere: (r = 12, wSegs = 28, hSegs = 20) =>
-        normalizeGeometry(new THREE.SphereGeometry(r, wSegs, hSegs)),
-      move: (geom, x = 0, y = 0, z = 0) => {
-        const g = normalizeGeometry(geom);
-        g.translate(x, y, z);
-        return g;
-      },
-      rot: (geom, rx = 0, ry = 0, rz = 0) => {
-        const g = normalizeGeometry(geom);
-        g.rotateX(rx);
-        g.rotateY(ry);
-        g.rotateZ(rz);
-        return g;
-      },
-      scale: (geom, sx = 1, sy = 1, sz = 1) => {
-        const g = normalizeGeometry(geom);
-        g.scale(sx, sy, sz);
-        return g;
-      },
-      add: (...geoms) => {
-        const list = geoms.flat(Infinity).filter(Boolean).map(normalizeGeometry);
-        if (list.length === 0) throw new Error('add() / union() requires at least one geometry.');
-        const merged = mergeGeometries(list, false);
-        if (!merged) throw new Error('Failed to combine geometries.');
-        merged.computeVertexNormals();
-        return merged;
-      },
-      sub: (baseGeom, ...cutters) => {
-        let tris = getTriangles(baseGeom);
-        const flatCuts = cutters.flat(Infinity).filter(Boolean);
-        for (const cut of flatCuts) {
-          tris = subtractConvexCutter(tris, cut);
-        }
-        return trianglesToGeometry(tris);
+      const view = new DataView(buffer);
+      const triCount = view.getUint32(80, true);
+      const expectedBytes = 84 + triCount * 50;
+      if (buffer.byteLength < expectedBytes) {
+        throw new Error(`Incomplete binary STL: expected ${expectedBytes} bytes for ${triCount} triangles, got ${buffer.byteLength}.`);
       }
-    };
 
-    // --- Viewport Setup ---
-    const host = document.getElementById('canvasHost');
-    const scene = new THREE.Scene();
-
-    const defaultCamPos = new THREE.Vector3(78, 64, 88);
-    const camera = new THREE.PerspectiveCamera(45, host.clientWidth / host.clientHeight, 0.1, 3000);
-    camera.position.copy(defaultCamPos);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(host.clientWidth, host.clientHeight);
-    host.appendChild(renderer.domElement);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.07;
-
-    scene.add(new THREE.AmbientLight(0xdce6ff, 0.75));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.25);
-    keyLight.position.set(100, 150, 110);
-    scene.add(keyLight);
-    const rimLight = new THREE.DirectionalLight(0x88b4ff, 0.55);
-    rimLight.position.set(-90, -40, -80);
-    scene.add(rimLight);
-
-    scene.add(new THREE.GridHelper(200, 20, 0x3f4b6b, 0x202738));
-    scene.add(new THREE.AxesHelper(24));
-
-    const partMaterial = new THREE.MeshStandardMaterial({
-      color: 0x4f8cff,
-      roughness: 0.36,
-      metalness: 0.12,
-      wireframe: false
-    });
-
-    let currentMesh = null;
-    let currentGeometry = null;
-
-    function geometryToBinarySTL(geometry, label = 'STL CAD Studio v4') {
-      const nonIndexed = geometry.index ? geometry.toNonIndexed() : geometry;
-      const pos = nonIndexed.getAttribute('position');
-      const triangleCount = Math.floor(pos.count / 3);
-      const bufferLength = 84 + triangleCount * 50;
-      const arrayBuffer = new ArrayBuffer(bufferLength);
-      const view = new DataView(arrayBuffer);
-
-      for (let i = 0; i < 80; i++) {
-        view.setUint8(i, i < label.length ? label.charCodeAt(i) : 32);
-      }
-      view.setUint32(80, triangleCount, true);
-
-      const vA = new THREE.Vector3();
-      const vB = new THREE.Vector3();
-      const vC = new THREE.Vector3();
-      const cb = new THREE.Vector3();
-      const ab = new THREE.Vector3();
-
+      const triangles = new Array(triCount);
       let offset = 84;
-      for (let i = 0; i < triangleCount; i++) {
-        const i3 = i * 3;
-        vA.fromBufferAttribute(pos, i3);
-        vB.fromBufferAttribute(pos, i3 + 1);
-        vC.fromBufferAttribute(pos, i3 + 2);
+      for (let i = 0; i < triCount; i++) {
+        const nx = view.getFloat32(offset, true); offset += 4;
+        const ny = view.getFloat32(offset, true); offset += 4;
+        const nz = view.getFloat32(offset, true); offset += 4;
 
-        cb.subVectors(vC, vB);
-        ab.subVectors(vA, vB);
-        cb.cross(ab).normalize();
+        const v1x = view.getFloat32(offset, true); offset += 4;
+        const v1y = view.getFloat32(offset, true); offset += 4;
+        const v1z = view.getFloat32(offset, true); offset += 4;
 
-        view.setFloat32(offset, cb.x, true); offset += 4;
-        view.setFloat32(offset, cb.y, true); offset += 4;
-        view.setFloat32(offset, cb.z, true); offset += 4;
+        const v2x = view.getFloat32(offset, true); offset += 4;
+        const v2y = view.getFloat32(offset, true); offset += 4;
+        const v2z = view.getFloat32(offset, true); offset += 4;
 
-        view.setFloat32(offset, vA.x, true); offset += 4;
-        view.setFloat32(offset, vA.y, true); offset += 4;
-        view.setFloat32(offset, vA.z, true); offset += 4;
+        const v3x = view.getFloat32(offset, true); offset += 4;
+        const v3y = view.getFloat32(offset, true); offset += 4;
+        const v3z = view.getFloat32(offset, true); offset += 4;
 
-        view.setFloat32(offset, vB.x, true); offset += 4;
-        view.setFloat32(offset, vB.y, true); offset += 4;
-        view.setFloat32(offset, vB.z, true); offset += 4;
+        offset += 2; // attribute byte count
 
-        view.setFloat32(offset, vC.x, true); offset += 4;
-        view.setFloat32(offset, vC.y, true); offset += 4;
-        view.setFloat32(offset, vC.z, true); offset += 4;
-
-        view.setUint16(offset, 0, true); offset += 2;
+        triangles[i] = {
+          n: [nx, ny, nz],
+          v1: [v1x, v1y, v1z],
+          v2: [v2x, v2y, v2z],
+          v3: [v3x, v3y, v3z]
+        };
       }
 
-      return new Blob([arrayBuffer], { type: 'application/octet-stream' });
+      return { format: 'Binary STL', triangles };
     }
 
-    const editor = document.getElementById('codeEditor');
-    const statusText = document.getElementById('statusText');
-    const statsText = document.getElementById('statsText');
-    const boundsCard = document.getElementById('boundsCard');
-    const presetSelect = document.getElementById('presetSelect');
-    const fileNameInput = document.getElementById('fileNameInput');
-    const fileInput = document.getElementById('fileInput');
-
-    function setStatus(msg, ok = true) {
-      statusText.textContent = msg;
-      statusText.className = ok ? 'status-ok' : 'status-err';
+    function fmtNum(n) {
+      return Number.isFinite(n) ? n.toFixed(2) : '0.00';
     }
 
-    function updateMetrics(geom) {
-      const pos = geom.getAttribute('position');
-      const triCount = Math.floor(pos.count / 3);
-      const box = new THREE.Box3().setFromBufferAttribute(pos);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-
-      const w = size.x.toFixed(1);
-      const h = size.y.toFixed(1);
-      const d = size.z.toFixed(1);
-
-      statsText.textContent = `${triCount.toLocaleString()} tris • ${w}×${h}×${d} mm`;
-      boundsCard.innerHTML =
-        `<strong>Size (W×H×D):</strong> ${w} × ${h} × ${d} mm<br/>` +
-        `<strong>X:</strong> [${box.min.x.toFixed(1)}, ${box.max.x.toFixed(1)}] ` +
-        `<strong>Y:</strong> [${box.min.y.toFixed(1)}, ${box.max.y.toFixed(1)}] ` +
-        `<strong>Z:</strong> [${box.min.z.toFixed(1)}, ${box.max.z.toFixed(1)}]`;
+    function fmtVec(v) {
+      return `(${fmtNum(v[0])}, ${fmtNum(v[1])}, ${fmtNum(v[2])})`;
     }
 
-    function displayGeometry(geom, label = 'Built & verified') {
-      const normalized = normalizeGeometry(geom);
-      const triCount = Math.floor(normalized.getAttribute('position').count / 3);
-      if (triCount === 0) {
-        throw new Error('Resulting mesh has 0 triangles.');
-      }
-      if (currentMesh) {
-        scene.remove(currentMesh);
-        currentMesh.geometry.dispose();
-      }
-      currentGeometry = normalized;
-      currentMesh = new THREE.Mesh(currentGeometry, partMaterial);
-      scene.add(currentMesh);
-      updateMetrics(currentGeometry);
-      setStatus(label, true);
+    function dist3(a, b) {
+      const dx = a[0] - b[0];
+      const dy = a[1] - b[1];
+      const dz = a[2] - b[2];
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
-    function buildModel() {
-      try {
-        const fn = new Function(
-          'box', 'cyl', 'tube', 'cone', 'sphere',
-          'move', 'rot', 'scale', 'add', 'sub',
-          'translate', 'rotate', 'union',
-          'deg', 'imported', 'hasImported', 'THREE',
-          editor.value
-        );
+    function renderText(parsed, fileName, mode) {
+      const { format, triangles } = parsed;
+      let minX = Infinity, minY = Infinity, minZ = Infinity;
+      let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
 
-        const result = fn(
-          CAD.box, CAD.cyl, CAD.tube, CAD.cone, CAD.sphere,
-          CAD.move, CAD.rot, CAD.scale, CAD.add, CAD.sub,
-          CAD.move, CAD.rot, CAD.add,
-          CAD.deg,
-          importedGeometry ? normalizeGeometry(importedGeometry) : null,
-          Boolean(importedGeometry),
-          THREE
-        );
-
-        if (!(result instanceof THREE.BufferGeometry)) {
-          throw new Error('Script must return a geometry (e.g. "return add(...)" or "return imported").');
+      for (const t of triangles) {
+        for (const p of [t.v1, t.v2, t.v3]) {
+          if (p[0] < minX) minX = p[0];
+          if (p[1] < minY) minY = p[1];
+          if (p[2] < minZ) minZ = p[2];
+          if (p[0] > maxX) maxX = p[0];
+          if (p[1] > maxY) maxY = p[1];
+          if (p[2] > maxZ) maxZ = p[2];
         }
-
-        displayGeometry(result, 'Built & verified');
-      } catch (err) {
-        setStatus(err && err.message ? err.message : String(err), false);
       }
-    }
 
-    function handleImportedBuffer(arrayBuffer, fileName) {
-      const lower = fileName.toLowerCase();
-      let geom = null;
+      const lines = [
+        `FILE: ${fileName}`,
+        `FORMAT: ${format}`,
+        `TRIANGLES: ${triangles.length}`,
+        `BOUNDS X: [${fmtNum(minX)}, ${fmtNum(maxX)}] (size ${fmtNum(maxX - minX)})`,
+        `BOUNDS Y: [${fmtNum(minY)}, ${fmtNum(maxY)}] (size ${fmtNum(maxY - minY)})`,
+        `BOUNDS Z: [${fmtNum(minZ)}, ${fmtNum(maxZ)}] (size ${fmtNum(maxZ - minZ)})`,
+        `--- TRIANGLES ---`
+      ];
 
-      if (lower.endsWith('.stl')) {
-        const loader = new STLLoader();
-        geom = loader.parse(arrayBuffer);
-      } else if (lower.endsWith('.obj')) {
-        const text = new TextDecoder().decode(arrayBuffer);
-        const loader = new OBJLoader();
-        const group = loader.parse(text);
-        const parts = [];
-        group.traverse((child) => {
-          if (child.isMesh && child.geometry) {
-            parts.push(normalizeGeometry(child.geometry));
-          }
-        });
-        if (parts.length === 0) throw new Error('No mesh triangles found in OBJ file.');
-        geom = mergeGeometries(parts, false);
+      if (mode === 'compact') {
+        for (let i = 0; i < triangles.length; i++) {
+          const t = triangles[i];
+          lines.push(`T${i + 1}: ${fmtVec(t.v1)} -> ${fmtVec(t.v2)} -> ${fmtVec(t.v3)}`);
+        }
       } else {
-        throw new Error('Unsupported file type. Please choose a .stl or .obj file.');
+        for (let i = 0; i < triangles.length; i++) {
+          const t = triangles[i];
+          const e12 = fmtNum(dist3(t.v1, t.v2));
+          const e23 = fmtNum(dist3(t.v2, t.v3));
+          const e31 = fmtNum(dist3(t.v3, t.v1));
+          lines.push(
+            `T${i + 1}: V1=${fmtVec(t.v1)} V2=${fmtVec(t.v2)} V3=${fmtVec(t.v3)} | N=${fmtVec(t.n)} | edges=${e12},${e23},${e31}`
+          );
+        }
       }
 
-      importedGeometry = normalizeGeometry(geom);
-      importedFileName = fileName;
-      const cleanStem = fileName.replace(/\.(stl|obj)$/i, '').replace(/[^a-zA-Z0-9_-]/g, '_');
-      if (cleanStem) fileNameInput.value = cleanStem;
-
-      displayGeometry(importedGeometry, `Imported ${fileName}`);
+      return lines.join('
+');
     }
 
-    fileInput.addEventListener('change', async (e) => {
-      const file = e.target.files && e.target.files[0];
+    async function processFile(file) {
       if (!file) return;
       try {
+        setStatus(`Reading ${file.name}...`, true);
         const buf = await file.arrayBuffer();
-        handleImportedBuffer(buf, file.name);
+        const parsed = parseSTL(buf);
+        lastParsed = parsed;
+        lastFileName = file.name;
+
+        const out = renderText(parsed, file.name, formatMode.value);
+        txtOutput.value = out;
+        fileInfo.textContent = `${file.name} (${parsed.format})`;
+        triStats.textContent = `${parsed.triangles.length.toLocaleString()} triangles`;
+        setStatus(`Converted ${parsed.triangles.length.toLocaleString()} triangles to text`, true);
       } catch (err) {
         setStatus(err && err.message ? err.message : String(err), false);
+      }
+    }
+
+    pickFileBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        processFile(e.target.files[0]);
       }
       fileInput.value = '';
     });
 
-    document.getElementById('importBtn').addEventListener('click', () => fileInput.click());
-
-    // Drag & drop STL/OBJ onto the 3D viewer
-    const viewerPane = document.querySelector('.viewer-pane');
-    viewerPane.addEventListener('dragover', (e) => {
+    dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
+      dropzone.classList.add('dragover');
     });
-    viewerPane.addEventListener('drop', async (e) => {
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
       e.preventDefault();
-      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-      if (!file) return;
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    formatMode.addEventListener('change', () => {
+      if (!lastParsed) return;
+      txtOutput.value = renderText(lastParsed, lastFileName, formatMode.value);
+      setStatus(`Updated format (${formatMode.value})`, true);
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      if (!txtOutput.value) return;
       try {
-        const buf = await file.arrayBuffer();
-        handleImportedBuffer(buf, file.name);
-      } catch (err) {
-        setStatus(err && err.message ? err.message : String(err), false);
-      }
-    });
-
-    // Generate a readable summary + rough CAD block approximation so the user can paste it into chat
-    const shareModal = document.getElementById('shareModal');
-    const shareCodeBox = document.getElementById('shareCodeBox');
-
-    function renderAsciiView(pos, axis1, axis2, cols = 44, rows = 16) {
-      let min1 = Infinity, max1 = -Infinity, min2 = Infinity, max2 = -Infinity;
-      const v = new THREE.Vector3();
-      for (let i = 0; i < pos.count; i++) {
-        v.fromBufferAttribute(pos, i);
-        const a = v[axis1], b = v[axis2];
-        if (a < min1) min1 = a;
-        if (a > max1) max1 = a;
-        if (b < min2) min2 = b;
-        if (b > max2) max2 = b;
-      }
-      const span1 = Math.max(1e-5, max1 - min1);
-      const span2 = Math.max(1e-5, max2 - min2);
-      const grid = Array.from({ length: rows }, () => Array(cols).fill(' '));
-
-      // Rasterize triangle edges & sample points into grid
-      const pA = new THREE.Vector3(), pB = new THREE.Vector3(), pC = new THREE.Vector3();
-      const plotPt = (xVal, yVal, ch) => {
-        const c = Math.min(cols - 1, Math.max(0, Math.floor(((xVal - min1) / span1) * cols)));
-        const r = Math.min(rows - 1, Math.max(0, Math.floor((1 - (yVal - min2) / span2) * rows)));
-        if (grid[r][c] === ' ') grid[r][c] = ch;
-        else if (grid[r][c] !== ch) grid[r][c] = '#';
-      };
-
-      const steps = 12;
-      for (let i = 0; i < pos.count; i += 3) {
-        pA.fromBufferAttribute(pos, i);
-        pB.fromBufferAttribute(pos, i + 1);
-        pC.fromBufferAttribute(pos, i + 2);
-        const edges = [[pA, pB], [pB, pC], [pC, pA]];
-        for (const [u, w] of edges) {
-          for (let s = 0; s <= steps; s++) {
-            const t = s / steps;
-            const px = u[axis1] + (w[axis1] - u[axis1]) * t;
-            const py = u[axis2] + (w[axis2] - u[axis2]) * t;
-            plotPt(px, py, '.');
-          }
-        }
-        for (let s = 0; s <= 4; s++) {
-          for (let k = 0; k <= 4 - s; k++) {
-            const b1 = s / 4, b2 = k / 4, b0 = Math.max(0, 1 - b1 - b2);
-            const px = pA[axis1] * b0 + pB[axis1] * b1 + pC[axis1] * b2;
-            const py = pA[axis2] * b0 + pB[axis2] * b1 + pC[axis2] * b2;
-            plotPt(px, py, '*');
-          }
-        }
-      }
-
-      const header = `// ${axis1.toUpperCase()} (left ${min1.toFixed(1)}..${max1.toFixed(1)}) vs ${axis2.toUpperCase()} (top ${max2.toFixed(1)}..bottom ${min2.toFixed(1)}):`;
-      const lines = grid.map(row => '// |' + row.join('') + '|');
-      return [header, ...lines].join('\n');
-    }
-
-    function countComponents(pos) {
-      const triCount = Math.floor(pos.count / 3);
-      if (triCount === 0) return { islands: 0 };
-      const keyOf = (v) => `${Math.round(v.x * 100)},${Math.round(v.y * 100)},${Math.round(v.z * 100)}`;
-      const vertexToTris = new Map();
-      const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
-
-      for (let t = 0; t < triCount; t++) {
-        a.fromBufferAttribute(pos, t * 3);
-        b.fromBufferAttribute(pos, t * 3 + 1);
-        c.fromBufferAttribute(pos, t * 3 + 2);
-        for (const k of [keyOf(a), keyOf(b), keyOf(c)]) {
-          if (!vertexToTris.has(k)) vertexToTris.set(k, []);
-          vertexToTris.get(k).push(t);
-        }
-      }
-
-      const visited = new Uint8Array(triCount);
-      let islands = 0;
-      for (let t = 0; t < triCount; t++) {
-        if (visited[t]) continue;
-        islands++;
-        const stack = [t];
-        visited[t] = 1;
-        while (stack.length > 0) {
-          const cur = stack.pop();
-          a.fromBufferAttribute(pos, cur * 3);
-          b.fromBufferAttribute(pos, cur * 3 + 1);
-          c.fromBufferAttribute(pos, cur * 3 + 2);
-          for (const k of [keyOf(a), keyOf(b), keyOf(c)]) {
-            const nbrs = vertexToTris.get(k) || [];
-            for (const nt of nbrs) {
-              if (!visited[nt]) {
-                visited[nt] = 1;
-                stack.push(nt);
-              }
-            }
-          }
-        }
-      }
-      return { islands };
-    }
-
-    function buildShareSnippet() {
-      const g = currentGeometry || importedGeometry;
-      if (!g) {
-        return '// No model loaded yet.';
-      }
-      const pos = g.getAttribute('position');
-      const triCount = Math.floor(pos.count / 3);
-      const box = new THREE.Box3().setFromBufferAttribute(pos);
-      const size = new THREE.Vector3();
-      const center = new THREE.Vector3();
-      box.getSize(size);
-      box.getCenter(center);
-
-      // Slice along Y into up to 5 horizontal layers to describe profile/steps
-      const layers = 5;
-      const yMin = box.min.y;
-      const stepY = size.y / layers;
-      const layerNotes = [];
-
-      if (stepY > 0.05) {
-        for (let i = 0; i < layers; i++) {
-          const y0 = yMin + i * stepY;
-          const y1 = y0 + stepY;
-          let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, count = 0;
-          const v = new THREE.Vector3();
-          for (let k = 0; k < pos.count; k++) {
-            v.fromBufferAttribute(pos, k);
-            if (v.y >= y0 - 1e-3 && v.y <= y1 + 1e-3) {
-              if (v.x < minX) minX = v.x;
-              if (v.x > maxX) maxX = v.x;
-              if (v.z < minZ) minZ = v.z;
-              if (v.z > maxZ) maxZ = v.z;
-              count++;
-            }
-          }
-          if (count > 0 && isFinite(minX)) {
-            const lw = (maxX - minX).toFixed(1);
-            const ld = (maxZ - minZ).toFixed(1);
-            const lx = ((minX + maxX) / 2).toFixed(1);
-            const lz = ((minZ + maxZ) / 2).toFixed(1);
-            const ly = ((y0 + y1) / 2).toFixed(1);
-            layerNotes.push(
-              `// Layer ${i + 1} (Y ${y0.toFixed(1)}..${y1.toFixed(1)}mm): ~${lw}x${stepY.toFixed(1)}x${ld}mm centered near (${lx}, ${ly}, ${lz})`
-            );
-          }
-        }
-      }
-
-      const { islands } = countComponents(pos);
-      const xyView = renderAsciiView(pos, 'x', 'y', 44, 14);
-      const xzView = renderAsciiView(pos, 'x', 'z', 44, 10);
-
-      return [
-        `// Model Inspection Packet for AI (paste this in chat)`,
-        `// Source file: ${importedFileName || 'scripted/built mesh'}`,
-        `// Triangles: ${triCount} | Separate mesh islands: ${islands}`,
-        `// Bounding Size (W x H x D): ${size.x.toFixed(2)} x ${size.y.toFixed(2)} x ${size.z.toFixed(2)} mm`,
-        `// X range: [${box.min.x.toFixed(2)}, ${box.max.x.toFixed(2)}]`,
-        `// Y range: [${box.min.y.toFixed(2)}, ${box.max.y.toFixed(2)}]`,
-        `// Z range: [${box.min.z.toFixed(2)}, ${box.max.z.toFixed(2)}]`,
-        ...layerNotes,
-        ``,
-        xyView,
-        ``,
-        xzView,
-        ``,
-        `// Centering shift to bring model center to (0, 0, 0):`,
-        `// move(imported, ${(-center.x).toFixed(2)}, ${(-center.y).toFixed(2)}, ${(-center.z).toFixed(2)})`,
-        `return move(box(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)}), ${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)});`
-      ].join('\n');
-    }
-
-    document.getElementById('shareBtn').addEventListener('click', () => {
-      shareCodeBox.value = buildShareSnippet();
-      shareModal.classList.add('open');
-    });
-
-    document.getElementById('closeShareBtn').addEventListener('click', () => {
-      shareModal.classList.remove('open');
-    });
-
-    document.getElementById('copyShareBtn').addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(shareCodeBox.value);
-        setStatus('Copied model summary & snippet to clipboard', true);
+        await navigator.clipboard.writeText(txtOutput.value);
+        setStatus('Copied triangle text to clipboard', true);
       } catch {
-        shareCodeBox.select();
+        txtOutput.select();
         document.execCommand('copy');
-        setStatus('Copied model summary & snippet', true);
+        setStatus('Copied triangle text to clipboard', true);
       }
     });
 
-    function downloadSTL() {
-      if (!currentGeometry) {
-        setStatus('Nothing to export yet — click Build or Import first.', false);
+    downloadTxtBtn.addEventListener('click', () => {
+      if (!txtOutput.value) {
+        setStatus('Load an .STL file first.', false);
         return;
       }
-      const rawName = (fileNameInput.value || 'custom_part').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
-      const finalName = rawName.toLowerCase().endsWith('.stl') ? rawName : `${rawName}.stl`;
-      const blob = geometryToBinarySTL(currentGeometry, finalName);
+      const stem = lastFileName.replace(/\.stl$/i, '').replace(/[^a-zA-Z0-9_-]/g, '_') || 'model';
+      const blob = new Blob([txtOutput.value], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = finalName;
+      a.download = `${stem}_triangles.txt`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setStatus(`Exported ${finalName}`, true);
-    }
-
-    presetSelect.addEventListener('change', () => {
-      editor.value = PRESETS[presetSelect.value] || PRESETS.mount_plate;
-      buildModel();
+      setStatus(`Downloaded ${stem}_triangles.txt`, true);
     });
-
-    document.getElementById('buildBtn').addEventListener('click', buildModel);
-    document.getElementById('exportBtn').addEventListener('click', downloadSTL);
-
-    document.getElementById('resetCamBtn').addEventListener('click', () => {
-      camera.position.copy(defaultCamPos);
-      controls.target.set(0, 10, 0);
-      controls.update();
-    });
-
-    document.getElementById('wireBtn').addEventListener('click', (e) => {
-      partMaterial.wireframe = !partMaterial.wireframe;
-      e.currentTarget.style.borderColor = partMaterial.wireframe ? '#4f8cff' : '';
-    });
-
-    editor.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        buildModel();
-      }
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const start = editor.selectionStart;
-        const end = editor.selectionEnd;
-        editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
-        editor.selectionStart = editor.selectionEnd = start + 2;
-      }
-    });
-
-    window.addEventListener('resize', () => {
-      if (!host.clientWidth || !host.clientHeight) return;
-      camera.aspect = host.clientWidth / host.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(host.clientWidth, host.clientHeight);
-    });
-
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    }
-
-    editor.value = PRESETS.mount_plate;
-    buildModel();
-    animate();
   </script>
 </body>
 </html>

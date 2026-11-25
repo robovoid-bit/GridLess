@@ -1,6 +1,8 @@
-<html lang="en"><head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>STL CAD Studio v3 — Import, Code &amp; Export</title>
 <style>
   :root {
@@ -346,10 +348,10 @@
   <header>
     <div class="brand">
       <span>STL CAD Studio</span>
-      <span class="badge">v3 • Import &amp; Code</span>
+      <span class="badge">v3 &bull; Import &amp; Code</span>
     </div>
     <div class="controls">
-      <input id="fileInput" type="file" accept=".stl,.obj" style="display: none;">
+      <input id="fileInput" type="file" accept=".stl,.obj" style="display: none;" />
       <button id="importBtn">Import STL/OBJ</button>
       <button id="shareBtn" class="warn">Copy Model Code for AI</button>
       <select id="presetSelect" title="Load a preset script">
@@ -358,7 +360,7 @@
         <option value="spacer_ring">Preset: Spacer &amp; Collar</option>
       </select>
       <button id="buildBtn" class="primary">Build (Ctrl+Enter)</button>
-      <input id="fileNameInput" type="text" value="custom_part" title="Export filename" style="width: 112px;">
+      <input id="fileNameInput" type="text" value="custom_part" title="Export filename" style="width: 112px;" />
       <button id="exportBtn" class="success">Export .STL</button>
     </div>
   </header>
@@ -370,14 +372,14 @@
         <span>1 unit = 1 mm</span>
       </div>
       <div class="ref-bar">
-        Imported mesh: <code>imported</code> (use <code>hasImported</code> to check) •
-        Shapes: <code>box(w,h,d)</code> <code>cyl(rTop,rBot,h,seg)</code> <code>tube(rOut,rIn,h,seg)</code> <code>cone(r,h,seg)</code> <code>sphere(r,wSeg,hSeg)</code><br>
+        Imported mesh: <code>imported</code> (use <code>hasImported</code> to check) &bull;
+        Shapes: <code>box(w,h,d)</code> <code>cyl(rTop,rBot,h,seg)</code> <code>tube(rOut,rIn,h,seg)</code> <code>cone(r,h,seg)</code> <code>sphere(r,wSeg,hSeg)</code><br/>
         Xform &amp; CSG: <code>move(g,x,y,z)</code> / <code>translate(...)</code> <code>rot(g,rx,ry,rz)</code> / <code>rotate(...)</code> <code>scale(g,sx,sy,sz)</code> <code>add(...gs)</code> / <code>union(...)</code> <code>sub(base,...cuts)</code> <code>deg(d)</code>
       </div>
       <textarea id="codeEditor" spellcheck="false"></textarea>
       <div class="status-bar">
         <span id="statusText" class="status-ok">Ready</span>
-        <span id="statsText" style="color: var(--muted);">0 tris • 0×0×0 mm</span>
+        <span id="statsText" style="color: var(--muted);">0 tris &bull; 0&times;0&times;0 mm</span>
       </div>
     </section>
 
@@ -389,10 +391,10 @@
       <div id="canvasHost"></div>
       <div class="hud-bottom">
         <div class="hud-card">
-          Left-drag: Orbit • Right-drag: Pan • Scroll: Zoom • Drag &amp; drop .stl/.obj anywhere
+          Left-drag: Orbit &bull; Right-drag: Pan &bull; Scroll: Zoom &bull; Drag &amp; drop .stl/.obj anywhere
         </div>
         <div id="boundsCard" class="hud-card">
-          <strong>Bounds:</strong> —
+          <strong>Bounds:</strong> &mdash;
         </div>
       </div>
     </section>
@@ -411,7 +413,7 @@
         <p>
           Paste this into the chat so I can see the exact dimensions, bounds, and approximate block/primitive breakdown of your current or imported 3D model without needing raw binary STL bytes.
         </p>
-        <textarea id="shareCodeBox" readonly=""></textarea>
+        <textarea id="shareCodeBox" readonly></textarea>
       </div>
     </div>
   </div>
@@ -1100,6 +1102,5 @@ return add(outer, lip);`
     buildModel();
     animate();
   </script>
-
-
-</body></html>
+</body>
+</html>

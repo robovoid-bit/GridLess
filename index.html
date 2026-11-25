@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>STL CAD Studio v3 — Import, Code &amp; Export</title>
+<title>STL CAD Studio v4 — Import, Code &amp; Export</title>
 <style>
   :root {
     --bg: #0c0f16;
@@ -348,7 +348,7 @@
   <header>
     <div class="brand">
       <span>STL CAD Studio</span>
-      <span class="badge">v3 &bull; Import &amp; Code</span>
+      <span class="badge">v4 &bull; Mesh Inspector</span>
     </div>
     <div class="controls">
       <input id="fileInput" type="file" accept=".stl,.obj" style="display: none;" />
@@ -752,7 +752,7 @@ return add(outer, lip);`
     let currentMesh = null;
     let currentGeometry = null;
 
-    function geometryToBinarySTL(geometry, label = 'STL CAD Studio v3') {
+    function geometryToBinarySTL(geometry, label = 'STL CAD Studio v4') {
       const nonIndexed = geometry.index ? geometry.toNonIndexed() : geometry;
       const pos = nonIndexed.getAttribute('position');
       const triangleCount = Math.floor(pos.count / 3);
@@ -949,6 +949,102 @@ return add(outer, lip);`
     const shareModal = document.getElementById('shareModal');
     const shareCodeBox = document.getElementById('shareCodeBox');
 
+    function renderAsciiView(pos, axis1, axis2, cols = 44, rows = 16) {
+      let min1 = Infinity, max1 = -Infinity, min2 = Infinity, max2 = -Infinity;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        const a = v[axis1], b = v[axis2];
+        if (a < min1) min1 = a;
+        if (a > max1) max1 = a;
+        if (b < min2) min2 = b;
+        if (b > max2) max2 = b;
+      }
+      const span1 = Math.max(1e-5, max1 - min1);
+      const span2 = Math.max(1e-5, max2 - min2);
+      const grid = Array.from({ length: rows }, () => Array(cols).fill(' '));
+
+      // Rasterize triangle edges & sample points into grid
+      const pA = new THREE.Vector3(), pB = new THREE.Vector3(), pC = new THREE.Vector3();
+      const plotPt = (xVal, yVal, ch) => {
+        const c = Math.min(cols - 1, Math.max(0, Math.floor(((xVal - min1) / span1) * cols)));
+        const r = Math.min(rows - 1, Math.max(0, Math.floor((1 - (yVal - min2) / span2) * rows)));
+        if (grid[r][c] === ' ') grid[r][c] = ch;
+        else if (grid[r][c] !== ch) grid[r][c] = '#';
+      };
+
+      const steps = 12;
+      for (let i = 0; i < pos.count; i += 3) {
+        pA.fromBufferAttribute(pos, i);
+        pB.fromBufferAttribute(pos, i + 1);
+        pC.fromBufferAttribute(pos, i + 2);
+        const edges = [[pA, pB], [pB, pC], [pC, pA]];
+        for (const [u, w] of edges) {
+          for (let s = 0; s <= steps; s++) {
+            const t = s / steps;
+            const px = u[axis1] + (w[axis1] - u[axis1]) * t;
+            const py = u[axis2] + (w[axis2] - u[axis2]) * t;
+            plotPt(px, py, '.');
+          }
+        }
+        for (let s = 0; s <= 4; s++) {
+          for (let k = 0; k <= 4 - s; k++) {
+            const b1 = s / 4, b2 = k / 4, b0 = Math.max(0, 1 - b1 - b2);
+            const px = pA[axis1] * b0 + pB[axis1] * b1 + pC[axis1] * b2;
+            const py = pA[axis2] * b0 + pB[axis2] * b1 + pC[axis2] * b2;
+            plotPt(px, py, '*');
+          }
+        }
+      }
+
+      const header = `// ${axis1.toUpperCase()} (left ${min1.toFixed(1)}..${max1.toFixed(1)}) vs ${axis2.toUpperCase()} (top ${max2.toFixed(1)}..bottom ${min2.toFixed(1)}):`;
+      const lines = grid.map(row => '// |' + row.join('') + '|');
+      return [header, ...lines].join('\n');
+    }
+
+    function countComponents(pos) {
+      const triCount = Math.floor(pos.count / 3);
+      if (triCount === 0) return { islands: 0 };
+      const keyOf = (v) => `${Math.round(v.x * 100)},${Math.round(v.y * 100)},${Math.round(v.z * 100)}`;
+      const vertexToTris = new Map();
+      const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+
+      for (let t = 0; t < triCount; t++) {
+        a.fromBufferAttribute(pos, t * 3);
+        b.fromBufferAttribute(pos, t * 3 + 1);
+        c.fromBufferAttribute(pos, t * 3 + 2);
+        for (const k of [keyOf(a), keyOf(b), keyOf(c)]) {
+          if (!vertexToTris.has(k)) vertexToTris.set(k, []);
+          vertexToTris.get(k).push(t);
+        }
+      }
+
+      const visited = new Uint8Array(triCount);
+      let islands = 0;
+      for (let t = 0; t < triCount; t++) {
+        if (visited[t]) continue;
+        islands++;
+        const stack = [t];
+        visited[t] = 1;
+        while (stack.length > 0) {
+          const cur = stack.pop();
+          a.fromBufferAttribute(pos, cur * 3);
+          b.fromBufferAttribute(pos, cur * 3 + 1);
+          c.fromBufferAttribute(pos, cur * 3 + 2);
+          for (const k of [keyOf(a), keyOf(b), keyOf(c)]) {
+            const nbrs = vertexToTris.get(k) || [];
+            for (const nt of nbrs) {
+              if (!visited[nt]) {
+                visited[nt] = 1;
+                stack.push(nt);
+              }
+            }
+          }
+        }
+      }
+      return { islands };
+    }
+
     function buildShareSnippet() {
       const g = currentGeometry || importedGeometry;
       if (!g) {
@@ -997,17 +1093,26 @@ return add(outer, lip);`
         }
       }
 
+      const { islands } = countComponents(pos);
+      const xyView = renderAsciiView(pos, 'x', 'y', 44, 14);
+      const xzView = renderAsciiView(pos, 'x', 'z', 44, 10);
+
       return [
-        `// Model Summary for AI (paste this in chat)`,
+        `// Model Inspection Packet for AI (paste this in chat)`,
         `// Source file: ${importedFileName || 'scripted/built mesh'}`,
-        `// Triangles: ${triCount}`,
+        `// Triangles: ${triCount} | Separate mesh islands: ${islands}`,
         `// Bounding Size (W x H x D): ${size.x.toFixed(2)} x ${size.y.toFixed(2)} x ${size.z.toFixed(2)} mm`,
         `// X range: [${box.min.x.toFixed(2)}, ${box.max.x.toFixed(2)}]`,
         `// Y range: [${box.min.y.toFixed(2)}, ${box.max.y.toFixed(2)}]`,
         `// Z range: [${box.min.z.toFixed(2)}, ${box.max.z.toFixed(2)}]`,
         ...layerNotes,
         ``,
-        `// Approximate bounding approximation:`,
+        xyView,
+        ``,
+        xzView,
+        ``,
+        `// Centering shift to bring model center to (0, 0, 0):`,
+        `// move(imported, ${(-center.x).toFixed(2)}, ${(-center.y).toFixed(2)}, ${(-center.z).toFixed(2)})`,
         `return move(box(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)}), ${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)});`
       ].join('\n');
     }
